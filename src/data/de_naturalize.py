@@ -90,7 +90,7 @@ def post_process(in_code_string, raw_code):
             try:
                 new_token = int(token.strip(), base=16)
                 result.append(new_token)
-            else:
+            except:
                 result.append('UNK_HASH')
         elif '\n' in token and len(token) > 2:
             tmp = token.split('\n')
