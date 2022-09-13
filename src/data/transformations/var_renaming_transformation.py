@@ -131,13 +131,26 @@ class VarRenamer(TransformationBase):
                 var_names.append(var_name)
             for child in current_node.children:
                 queue.append(child)
-        return var_names, func_names, types
+        return var_names, func_names
 
     def var_renaming(self, code_string):
-        root = self.parse_code(code_string)
-        original_code = self.tokenizer_function(code_string, root)
+
+        root_node = self.parse_code(code_string)
+        types = [root_node.sexp()]
+        # print(root_node.sexp())
+        # print(root_node.type)
+        # print(root_node.start_point)
+        # print(root_node.end_point)
+        # function_node = root_node.children[0]
+        # print(function_node.type)
+        # print(function_node.child_by_field_name('name').type)
+        # function_name_node = function_node.children[1]
+        # print(function_name_node.type)
+        # print(function_name_node.start_point)
+        # print(function_name_node.end_point)
+        original_code = self.tokenizer_function(code_string, root_node)
         # print('-- original_code: ', " ".join(original_code))
-        var_names, func_names, types = self.extract_var_names(root, code_string)
+        var_names, func_names = self.extract_var_names(root_node, code_string)
         # var_names = sorted(var_names)
         if self.random_shuffle:
             random.shuffle(var_names)
@@ -164,12 +177,14 @@ class VarRenamer(TransformationBase):
             modified_code_string =   modified_code_string  + ' @SPLIT_MARK@ ' + ' '.join(types)
             return modified_root, modified_code_string, True
         else:
-            return root, code_string, False
+            return root_node, code_string, False
 
     def transform_code(
             self,
-            code: Union[str, bytes]
+            code: Union[str, bytes],
+            random: bool
     ) -> Tuple[str, object]:
+        self.random_shuffle = random
         root, code, success = self.var_renaming(code)
         code = re.sub("[ \n\t]+", " ", code)
         return code, {

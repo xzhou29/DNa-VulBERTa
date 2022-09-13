@@ -7,7 +7,7 @@ import warnings
 from joblib import Parallel, delayed
 import json
 import de_naturalize
-
+import random
 warnings.filterwarnings('ignore')  # "error", "ignore", "always", "default", "module" or "once"
 
 
@@ -29,12 +29,21 @@ def main():
     data_file = args.input
     f = open(data_file)
     data = json.load(f)
+
+    # print(data[:1])
+    random.Random(2022).shuffle(data)
+    # print(data[:1])
+    # sys.exit(0)
+    # 0.8/0.1/0.1
+    data = data[:int(len(data) * 0.8)]
+
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
     parser_path = os.path.join(base_dir, "parser", "languages.so")
-    columns=['index', 'filename', 'text']
+    columns=['index', 'filename', 'code', 'types']
 
+    # def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_iter, parser_path):
     new_data_collections = Parallel(n_jobs=args.workers)\
-            (delayed(de_naturalize.data_extractor)(i, data[i]['project'], data[i]['commit_id'],
+            (delayed(de_naturalize.data_extractor)(i, data[i]['commit_id'],
                                      data[i]['target'], data[i]['func'],
                                      columns, denaturalize_iter, parser_path)
              for i in tqdm( range(len(data))))
@@ -49,24 +58,6 @@ def main():
     new_data = pd.DataFrame(all_new_data_collections, columns=columns)
     new_data.to_pickle(output_filename)  
     print('saved as: ', output_filename)
-
-# def data_extractor(index, project, commit_id, target, original_code, columns, denaturalize_iter, parser_path):
-#     new_rows = []
-#     # print(func)
-#     code = original_code
-#     for j in range(denaturalize_iter):
-#         code, types, processed_code = de_naturalize.denaturalize_code(original_code, parser_path)
-#         code_to_save = processed_code # + ' @@ ' + types
-#         new_row = {}
-#         for column in columns:
-#             if column == 'index':
-#                 new_row[column] = index
-#             elif column == 'filename':
-#                 new_row[column] = commit_id + '_' + str(j)
-#             elif column == 'text':
-#                 new_row[column] = code_to_save
-#     new_rows.append(new_row)
-#     return new_rows
 
 
 if __name__ == '__main__':

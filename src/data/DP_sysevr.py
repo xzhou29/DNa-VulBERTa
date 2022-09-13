@@ -7,6 +7,7 @@ import warnings
 from joblib import Parallel, delayed
 import json
 import de_naturalize
+import random
 
 warnings.filterwarnings('ignore')  # "error", "ignore", "always", "default", "module" or "once"
 
@@ -28,13 +29,21 @@ def main():
     # load pre-processed data
     filename = args.input
     data = read_sysevr_data(filename)
-
+    print(data[:10])
+    random.Random(2022).shuffle(data['testcase_ID'])
+    random.Random(2022).shuffle(data['filename'])
+    random.Random(2022).shuffle(data['flaw'])
+    random.Random(2022).shuffle(data['flaw_loc'])
+    random.Random(2022).shuffle(data['bug'])
+    random.Random(2022).shuffle(data['code'])
+    print(data[:10])
+    data = data[:int(len(data) * 0.7)]
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
     parser_path = os.path.join(base_dir, "parser", "languages.so")
     columns=['index', 'filename', 'text']
-
+    # def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_iter, parser_path):
     new_data_collections = Parallel(n_jobs=args.workers)\
-            (delayed(de_naturalize.data_extractor)(i, data['testcase_ID'][i], data['filename'][i],
+            (delayed(de_naturalize.data_extractor)(i, data['filename'][i],
                                      data['bug'][i], data['code'][i],
                                      columns, denaturalize_iter, parser_path)
              for i in tqdm( range(len(data))))
@@ -64,6 +73,8 @@ def read_sysevr_data(filename):
     print('reading sysevr data: ', filename)
     print('slicelists length: ', len(slicelists))
     for index, slice in tqdm(enumerate(slicelists)):
+        # if index == 10:
+        #     break
         lines = slice.split('\n')
         if lines[0] == '':
             del lines[0]

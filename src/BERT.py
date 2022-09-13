@@ -13,7 +13,8 @@ from tokenizers.processors import BertProcessing
 base_dir = '..\\cbert\\DNa_data'
 model_path = "pretrained-bert-v3"
 
-source_code_data = load_data.load_DNa_data(base_dir)
+# code or types
+source_code_data = load_data.load_DNa_data(base_dir, mode='code')
 # dataset = load_dataset("cc_news", split="train")
 # # each instance is a dictionary as:  ['title', 'text', 'domain', 'date', 'description', 'url', 'image_url']
 # print(dataset[0].keys())
@@ -73,7 +74,6 @@ tokenizer = BertWordPieceTokenizer()
 
 # # train the tokenizer
 tokenizer.train(files=files, vocab_size=vocab_size, special_tokens=special_tokens)
-
 
 # # # enable truncation up to the maximum 512 tokens
 tokenizer.enable_truncation(max_length=max_length)

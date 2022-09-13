@@ -7,7 +7,7 @@ import os
 import pickle 
 from tqdm import tqdm
 
-def load_DNa_data(base_dir):
+def load_DNa_data(base_dir, mode='code'):
     # each instance is a dictionary as:  ['filename', 'code']
     # TODO test with only one file 
     # file_names = glob.glob(os.path.join('/scratch/xin/bert_source/top_60_cpp_topological/', 'data_10000.pkl'), recursive=False)
@@ -20,7 +20,7 @@ def load_DNa_data(base_dir):
             for i in range(len(mydict['filename'])):
                 # print(mydict['filename'][i], mydict['text'][i])
                 df['filename'].append(mydict['filename'][i])
-                df['text'].append(mydict['text'][i])
+                df['text'].append(mydict[mode][i])
     #             print(mydict['text'][i])
     # sys.exit(0)
     df = pd.DataFrame(df)

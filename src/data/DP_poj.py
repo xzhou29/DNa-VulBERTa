@@ -3,32 +3,59 @@ import sys
 import os
 from tqdm import tqdm
 import argparse
-import utils
 import warnings
 from joblib import Parallel, delayed
-import tokenizer 
 import json
+import de_naturalize
 warnings.filterwarnings('ignore')  # "error", "ignore", "always", "default", "module" or "once"
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', required=False, help='Clone-detection-POJ-104/dataset',
-                        default='/scratch/cbert/datasets/Clone-detection-POJ-104/dataset')
+    parser.add_argument('--input', required=False, help='Clone-detection-POJ-104/dataset/*.jsol',
+                        default='..\\cbert\\datasets\\Clone-detection-POJ-104\\dataset\\train.jsonl\\train.jsonl')
 
-    parser.add_argument('--output_dir', required=False, help='Clone-detection-POJ-104/dataset',
-                        default="/scratch/cbert/datasets/Clone-detection-POJ-104/dataset")
+    parser.add_argument('--output', required=False, help='..\\cbert\\DNa_data\\mvdsc.pkl',
+                        default="..\\cbert\\DNa_data\\poj.pkl")
     parser.add_argument('--workers', required=False, help='number of workers',
                         default=1, type=int)
-
+    parser.add_argument('--iter', required=False, help='number of denaturalize_iter',
+                        default=1, type=int)
     args = parser.parse_args()
+
+    output_filename = args.output
+    denaturalize_iter = args.iter
     # load pre-processed data
-    train_file = os.path.join(args.input_dir, 'train.jsonl')
-    test_file = os.path.join(args.input_dir, 'test.jsonl')
-    valid_file = os.path.join(args.input_dir, 'valid.jsonl')
-    tokenize_file(train_file, args.output_dir)
-    tokenize_file(test_file, args.output_dir)
-    tokenize_file(valid_file, args.output_dir)
+    data_type = 'train'
+    input_file = args.input
+    data = []
+    with open(input_file) as f:
+        for line in f:
+            line = line.strip()
+            js = json.loads(line)
+            data.append(js)
+
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
+    parser_path = os.path.join(base_dir, "parser", "languages.so")
+    columns=['index', 'filename', 'code', 'types']
+
+    # def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_iter, parser_path):
+    new_data_collections = Parallel(n_jobs=args.workers)\
+            (delayed(de_naturalize.data_extractor)(i, 'poj_' + str(data[i]['index']),
+                                     data[i]['label'], data[i]['code'],
+                                     columns, denaturalize_iter, parser_path)
+             for i in tqdm( range(len(data))))
+
+    all_new_data_collections = []
+    index = 0
+    for rows in new_data_collections:
+        for row in rows:
+            row['index'] == index
+            index += 1
+            all_new_data_collections.append(row)
+    new_data = pd.DataFrame(all_new_data_collections, columns=columns)
+    new_data.to_pickle(output_filename)  
+    print('saved as: ', output_filename)
 
 
 def tokenize_file(input_file, output_dir):

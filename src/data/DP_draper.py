@@ -27,14 +27,17 @@ def main():
     in_file = args.input
     out_file = args.output
     vdisc_h45py = h5py.File(in_file)
+    output_filename = args.output
+
+
 
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
     parser_path = os.path.join(base_dir, "parser", "languages.so")
-    columns=['index', 'filename', 'text']
+    columns=['index', 'filename', 'code', 'types']
 
+    # def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_iter, parser_path):
     new_data_collections = Parallel(n_jobs=args.workers)\
             (delayed(de_naturalize.data_extractor)(i, 
-                                    i,
                                     "draper_{}_{}".format(in_file, i),
                                     vdisc_h45py['CWE-119'][i] or vdisc_h45py['CWE-120'][i] \
                                     or vdisc_h45py['CWE-469'][i] or vdisc_h45py['CWE-476'][i] \
@@ -43,6 +46,7 @@ def main():
                                     columns, denaturalize_iter, parser_path)
              for i in tqdm( range(len(vdisc_h45py['functionSource']))))
 
+
     all_new_data_collections = []
     index = 0
     for rows in new_data_collections:
@@ -50,10 +54,11 @@ def main():
             row['index'] == index
             index += 1
             all_new_data_collections.append(row)
-
     new_data = pd.DataFrame(all_new_data_collections, columns=columns)
     new_data.to_pickle(output_filename)  
     print('saved as: ', output_filename)
+
+
 
 
 def load_vdisc(code, is_bug, i, tokenizer):

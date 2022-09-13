@@ -28,6 +28,7 @@ class TransformationBase:
         self.lang_object = Language(parser_path, language)
         self.parser = Parser()
         self.parser.set_language(self.lang_object)
+        self.tree = None
         pass
 
     def parse_code(
@@ -45,6 +46,7 @@ class TransformationBase:
             tree = self.parser.parse(code.encode())
         else:
             raise ValueError("Code must be character string or bytes string")
+        self.tree = tree
         return tree.root_node
 
     def get_tokens(
@@ -120,7 +122,8 @@ class TransformationBase:
 
     def transform_code(
             self,
-            code: Union[str, bytes]
+            code: Union[str, bytes],
+            random=False
     ) -> Tuple[str, object]:
         """
         Transforms a piece of code and returns the transformed version
