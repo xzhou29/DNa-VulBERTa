@@ -61,10 +61,10 @@ def denaturalize_code(code, parser_path='', mode='c', random=False):
         print('not added yet')
     code, no_transform, language_transformers = copy.copy(input_map['c'])
     original_code = code
-    code = pre_process(code)
+    # code = pre_process(code)
     tokenized_code, success = language_transformers.transform_code(code, random=random)
     if not success['success']:
-        print(code, tokenized_code)
+        print(original_code, tokenized_code)
     if ' @SPLIT_MARK@ ' in tokenized_code:
         tokenized_code_list = tokenized_code.split(' @SPLIT_MARK@ ')
         code = tokenized_code_list[0]
@@ -75,6 +75,39 @@ def denaturalize_code(code, parser_path='', mode='c', random=False):
     # processed_code = post_process(code, raw_code)
     return code, types, original_code
 
+
+# remove comments from raw source code
+def remove_comments(code_str):
+    lines = code_str.split('\n')
+    is_comment = False
+    result = []
+    result_map = []
+    for line_number, line in enumerate(lines):
+        new_line = ""
+        length = len(line)
+        for i in range(0, length):
+            if i < length - 1 and line[i:i+2] == "/*":
+                is_comment = True
+            elif i < length - 1 and line[i:i+2] == "*/":
+                is_comment = False
+                if new_line.strip() == "":
+                    break
+                result.append(new_line)
+                result_map.append([new_line.strip(), line_number + 1])
+                new_line = ' '
+                break
+            elif i < length - 1 and line[i:i+2] == '//':
+                new_line += '\n'
+                break
+            if not is_comment:
+                new_line += line[i]
+        if new_line.strip() == "":
+            continue
+        result.append(new_line)
+        result_map.append([new_line.strip(), line_number + 1])
+    return '\n'.join(result), result_map
+
+
 def pre_process(code):
     single_quo = 0
     double_quo = 0 
@@ -84,7 +117,7 @@ def pre_process(code):
     replace_next = False
     keep_next = False
     new_code = ''
-    for ch in code:
+    for i, ch in enumerate(code):
         # termination
         if ch == '"' and double_quo_start:
             double_quo_start = False
@@ -110,7 +143,12 @@ def pre_process(code):
                 keep_next = True
                 new_code += ch
             else:
+                # optional replacement
                 new_code += 'x'
+                # if ch == '/' or ch == '\\':
+                #     new_code += 'x'
+                # else:
+                #     new_code += ch
             replace_next = False
         else:
             new_code += ch
@@ -240,7 +278,7 @@ if __name__ == '__main__':
         // clear previous search results
         dropSearch();
 
-        // notify about the start
+        // 'notify about the start
         emit searchStarted();
 
         // build the google images search string
@@ -296,6 +334,10 @@ if __name__ == '__main__':
         }
         requestString += "&imgc=" + coloration;
     #endif
+    /* 55
+    555 55
+    */
+    /* sss */
     #if 0
         switch (ui->CB_filter->currentIndex()) {
             case 0: safeFilter="off"; break;
@@ -358,7 +400,7 @@ if __name__ == '__main__':
     int loginUrlEncode(string method, string server, string uid,
                       string pwd)
     {
-            return (method + ":// %d %s \\\'" +
+            return (method + ":////\\\\" +
                     (uid.size() > 0 ? encword(uid)
                     + (pwd.size() > 0 ? ":" + encword(pwd):"") + "@":"")
                     + server);
@@ -385,9 +427,8 @@ if __name__ == '__main__':
                 ),}
                 
     code, no_transform, language_transformers = copy.copy(input_map['c'])
-
-    code = pre_process(code)
-
+    # code, _ = remove_comments(code)
+    # code = pre_process(code)
     tokenized_code, success = language_transformers.transform_code(code, random=False)
     if ' @SPLIT_MARK@ ' in tokenized_code:
         tokenized_code_list = tokenized_code.split(' @SPLIT_MARK@ ')
@@ -396,8 +437,6 @@ if __name__ == '__main__':
     else:
         code = tokenized_code
         types = []
-
     # processed_code = post_process(code, source_code)
-
     print(code)
     print(types)
