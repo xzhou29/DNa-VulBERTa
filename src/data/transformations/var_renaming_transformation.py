@@ -166,8 +166,8 @@ class VarRenamer(TransformationBase):
         for t in original_code:
             if t in var_names:
                 modified_code.append(var_map[t])
-            elif t in func_names:
-                modified_code.append(func_map[t])
+            # elif t in func_names:
+            #     modified_code.append(func_map[t])
             else:
                 modified_code.append(t)
         modified_code_string = " ".join(modified_code)

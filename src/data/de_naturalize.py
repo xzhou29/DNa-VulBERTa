@@ -60,6 +60,7 @@ def denaturalize_code(code, parser_path='', mode='c', random=False):
     else:
         print('not added yet')
     code, no_transform, language_transformers = copy.copy(input_map['c'])
+    code = pre_process(code)
     tokenized_code, _ = language_transformers.transform_code(code, random=random)
     if ' @SPLIT_MARK@ ' in tokenized_code:
         tokenized_code_list = tokenized_code.split(' @SPLIT_MARK@ ')
@@ -68,8 +69,53 @@ def denaturalize_code(code, parser_path='', mode='c', random=False):
     else:
         code = tokenized_code
         types = []
-    processed_code = post_process(code, raw_code)
+    # processed_code = post_process(code, raw_code)
     return code, types, processed_code
+
+def pre_process(code):
+    print(code)
+    single_quo = 0
+    double_quo = 0 
+    double_quo_start = False
+    single_quo_start = False
+    skip = False
+    replace_next = False
+    keep_next = False
+    new_code = ''
+    for ch in code:
+        # termination
+        if ch == '"' and double_quo_start:
+            double_quo_start = False
+            replace_next = False
+            new_code += ch
+            continue
+        elif ch == "'" and single_quo_start:
+            single_quo_start = False
+            replace_next = False
+            new_code += ch
+            continue
+        # activation
+        if ch == '"' and not single_quo_start:
+            double_quo_start = True
+        elif ch == "'" and not double_quo_start:
+            single_quo_start = True
+        # replacement
+        if replace_next:
+            if keep_next:
+                new_code += ch
+                keep_next = False
+            elif ch == '%':
+                keep_next = True
+                new_code += ch
+            else:
+                new_code += 'x'
+            replace_next = False
+        else:
+            new_code += ch
+        # check next replacement
+        if single_quo_start or double_quo_start:
+            replace_next = True
+    return new_code
 
 
 def post_process(in_code_string, raw_code):
@@ -304,7 +350,19 @@ if __name__ == '__main__':
         return((void *) fd);
     }
     """
-    source_code = source_code_3
+
+    source_code_4 = """
+
+    loginUrlEncode(string method, string server, string uid,
+                      string pwd)
+    {
+            return (method + ":// %d %s \\\'" +
+                    (uid.size() > 0 ? encword(uid)
+                    + (pwd.size() > 0 ? ":" + encword(pwd):"") + "@":"")
+                    + server);
+    }
+    """
+    source_code = source_code_4
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))     
     parser_path = os.path.join(base_dir, "parser", "languages.so")
     transformers = {
@@ -323,8 +381,12 @@ if __name__ == '__main__':
                         parser_path=parser_path, language="c", transform_functions=transformers
                     )
                 ),}
+                
     code, no_transform, language_transformers = copy.copy(input_map['c'])
-    tokenized_code, _ = language_transformers.transform_code(code, random=False)
+
+    code = pre_process(code)
+
+    tokenized_code, success = language_transformers.transform_code(code, random=False)
     if ' @SPLIT_MARK@ ' in tokenized_code:
         tokenized_code_list = tokenized_code.split(' @SPLIT_MARK@ ')
         code = tokenized_code_list[0]
@@ -333,6 +395,7 @@ if __name__ == '__main__':
         code = tokenized_code
         types = []
 
-    processed_code = post_process(code, source_code)
+    # processed_code = post_process(code, source_code)
 
-    print(processed_code)
+    print(code)
+    print(types)

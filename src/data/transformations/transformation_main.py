@@ -59,4 +59,4 @@ class SemanticPreservingTransformation:
             t = self.transformations[si]
             code, metadata = t.transform_code(code, random)
 
-        return code, transformation_name
+        return code, metadata
