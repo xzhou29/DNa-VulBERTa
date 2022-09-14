@@ -27,14 +27,14 @@ def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_
             if column == 'index':
                 new_row[column] = index
             elif column == 'filename':
-                new_row[column] = str(uniqe_id) + '{}_{}'.format(index, j)
+                new_row[column] = str(uniqe_id) + '_{}_{}'.format(index, j)
             elif column == 'code':
                 new_row[column] = code
             elif column == 'types':
                 new_row[column] = types
             elif column == 'label':
                 new_row[column] = label
-    new_rows.append(new_row)
+        new_rows.append(new_row)
     return new_rows
 
 
