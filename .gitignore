@@ -1,3 +1,6 @@
 pretrained-bert*
 **__pycache__**
 *.pyc
+venv
+wandb
+pretrained*
