@@ -60,8 +60,11 @@ def denaturalize_code(code, parser_path='', mode='c', random=False):
     else:
         print('not added yet')
     code, no_transform, language_transformers = copy.copy(input_map['c'])
+    original_code = code
     code = pre_process(code)
-    tokenized_code, _ = language_transformers.transform_code(code, random=random)
+    tokenized_code, success = language_transformers.transform_code(code, random=random)
+    if not success['success']:
+        print(code, tokenized_code)
     if ' @SPLIT_MARK@ ' in tokenized_code:
         tokenized_code_list = tokenized_code.split(' @SPLIT_MARK@ ')
         code = tokenized_code_list[0]
@@ -70,10 +73,9 @@ def denaturalize_code(code, parser_path='', mode='c', random=False):
         code = tokenized_code
         types = []
     # processed_code = post_process(code, raw_code)
-    return code, types, processed_code
+    return code, types, original_code
 
 def pre_process(code):
-    print(code)
     single_quo = 0
     double_quo = 0 
     double_quo_start = False
@@ -353,7 +355,7 @@ if __name__ == '__main__':
 
     source_code_4 = """
 
-    loginUrlEncode(string method, string server, string uid,
+    int loginUrlEncode(string method, string server, string uid,
                       string pwd)
     {
             return (method + ":// %d %s \\\'" +
