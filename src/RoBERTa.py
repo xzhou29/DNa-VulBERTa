@@ -72,7 +72,7 @@ truncate_longer_samples = True #True
 # initialize the WordPiece tokenizer
 # tokenizer = BertWordPieceTokenizer()
 from tokenizers import ByteLevelBPETokenizer
-tokenizer = RobertaTokenizer()
+# tokenizer = RobertaTokenizer()
 tokenizer = ByteLevelBPETokenizer()
 
 # # train the tokenizer
@@ -107,7 +107,9 @@ with open(os.path.join(model_path, "config.json"), "w") as f:
     json.dump(tokenizer_cfg, f)
 
 # when the tokenizer is trained and configured, load it as BertTokenizerFast
-tokenizer = BertTokenizerFast.from_pretrained(model_path)
+# tokenizer = BertTokenizerFast.from_pretrained(model_path)
+tokenizer = ByteLevelBPETokenizer.from_pretrained(model_path)
+
 
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
