@@ -77,16 +77,7 @@ truncate_longer_samples = True #True
 # from tokenizers import ByteLevelBPETokenizer
 
 
-if pretrained_tokenizer:
-    # when the tokenizer is trained and configured, load it as BertTokenizerFast
-    # tokenizer = BertTokenizerFast.from_pretrained(model_path)
-    # tokenizer = ByteLevelBPETokenizer(
-    #             os.path.join(model_path, "vocab.json"),
-    #             os.path.join(model_path, "merges.txt")
-    #             )
-    # Create the tokenizer from a trained one
-    tokenizer = RobertaTokenizerFast.from_pretrained(model_path, max_len=max_length)
-else:
+if not pretrained_tokenizer:
     # tokenizer = RobertaTokenizer()
     tokenizer = ByteLevelBPETokenizer()
     print('222')

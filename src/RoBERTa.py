@@ -11,7 +11,7 @@ from tokenizers.processors import BertProcessing
 #base_dir = '/project/verma/github_data/bert_source_v3/'
 base_dir = '/project/verma/vul_dataset/dna_data/'
 model_path = "pretrained-dna-bert"
-pretrained_tokenizer = True
+pretrained_tokenizer = False
 
 # code or types
 source_code_data = load_data.load_DNa_data(base_dir, mode='code')
@@ -106,36 +106,58 @@ with open(os.path.join(model_path, "config.json"), "w") as f:
 
 # when the tokenizer is trained and configured, load it as BertTokenizerFast
 # tokenizer = BertTokenizerFast.from_pretrained(model_path)
-tokenizer = RobertaTokenizerFast.from_pretrained(model_path)
+tokenizer = RobertaTokenizerFast.from_pretrained(model_path, max_len=max_length)
 
 
-def encode_with_truncation(examples):
-    """Mapping function to tokenize the sentences passed with truncation"""
-    return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=max_length, return_special_tokens_mask=True)
+class CustomDataset(Dataset):
+    def __init__(self, df, tokenizer):
+        # or use the RobertaTokenizer from `transformers` directly.
+        self.examples = []
+        # For every value in the dataframe 
+        for example in df.values:
+            # 
+            x=tokenizer.encode_plus(example, max_length = max_length, truncation=True, padding=True)
+            self.examples += [x.input_ids]
 
-def encode_without_truncation(examples):
-    """Mapping function to tokenize the sentences passed without truncation"""
-    return tokenizer(examples["text"], return_special_tokens_mask=True)
+    def __len__(self):
+        return len(self.examples)
 
-# the encode function will depend on the truncate_longer_samples variable
-encode = encode_with_truncation if truncate_longer_samples else encode_without_truncation
+    def __getitem__(self, i):
+        # We’ll pad at the batch level.
+        return torch.tensor(self.examples[i])
+      
+# Create the train and evaluation dataset
+train_dataset = CustomDataset(d['train'], tokenizer)
+test_dataset = CustomDataset(d['test'], tokenizer)
 
-# tokenizing the train dataset
-train_dataset = d["train"].map(encode, batched=True)
-# tokenizing the testing dataset
-test_dataset = d["test"].map(encode, batched=True)
+
+# def encode_with_truncation(examples):
+#     """Mapping function to tokenize the sentences passed with truncation"""
+#     return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=max_length, return_special_tokens_mask=True)
+
+# def encode_without_truncation(examples):
+#     """Mapping function to tokenize the sentences passed without truncation"""
+#     return tokenizer(examples["text"], return_special_tokens_mask=True)
+
+# # the encode function will depend on the truncate_longer_samples variable
+# encode = encode_with_truncation if truncate_longer_samples else encode_without_truncation
+
+# # tokenizing the train dataset
+# train_dataset = d["train"].map(encode, batched=True)
+# # tokenizing the testing dataset
+# test_dataset = d["test"].map(encode, batched=True)
 
 # print(train_dataset[0])
 # print(train_dataset[1])
 # sys.exit(0)
 
-if truncate_longer_samples:
-    # remove other columns and set input_ids and attention_mask as 
-    train_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
-    test_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
-else:
-    test_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
-    train_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
+# if truncate_longer_samples:
+#     # remove other columns and set input_ids and attention_mask as 
+#     train_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
+#     test_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
+# else:
+#     test_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
+#     train_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
 
 print(train_dataset, test_dataset)
 
@@ -143,38 +165,50 @@ print(train_dataset, test_dataset)
 # sys.exit(0)
 # Main data processing function that will concatenate all texts from our dataset and generate chunks of
 # max_seq_length.
-def group_texts(examples):
-    # Concatenate all texts.
-    concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
-    total_length = len(concatenated_examples[list(examples.keys())[0]])
-    # We drop the small remainder, we could add padding if the model supported it instead of this drop, you can
-    # customize this part to your needs.
-    if total_length >= max_length:
-        total_length = (total_length // max_length) * max_length
-    # Split by chunks of max_len.
-    result = {
-        k: [t[i : i + max_length] for i in range(0, total_length, max_length)]
-        for k, t in concatenated_examples.items()
-    }
-    return result
+# def group_texts(examples):
+#     # Concatenate all texts.
+#     concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
+#     total_length = len(concatenated_examples[list(examples.keys())[0]])
+#     # We drop the small remainder, we could add padding if the model supported it instead of this drop, you can
+#     # customize this part to your needs.
+#     if total_length >= max_length:
+#         total_length = (total_length // max_length) * max_length
+#     # Split by chunks of max_len.
+#     result = {
+#         k: [t[i : i + max_length] for i in range(0, total_length, max_length)]
+#         for k, t in concatenated_examples.items()
+#     }
+#     return result
 # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts throws away a
 # remainder for each of those groups of 1,000 texts. You can adjust that batch_size here but a higher value
 # might be slower to preprocess.
 #
 # To speed up this part, we use multiprocessing. See the documentation of the map method for more information:
 # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map
-if not truncate_longer_samples:
-    train_dataset = train_dataset.map(group_texts, batched=True, batch_size=128,
-                                        desc=f"Grouping texts in chunks of {max_length}")
-    test_dataset = test_dataset.map(group_texts, batched=True, batch_size=128,
-                                    num_proc=4, desc=f"Grouping texts in chunks of {max_length}")
+# if not truncate_longer_samples:
+#     train_dataset = train_dataset.map(group_texts, batched=True, batch_size=128,
+#                                         desc=f"Grouping texts in chunks of {max_length}")
+#     test_dataset = test_dataset.map(group_texts, batched=True, batch_size=128,
+#                                     num_proc=4, desc=f"Grouping texts in chunks of {max_length}")
 
 # print(train_dataset[0])
 # sys.exit(0)
+# Set a configuration for our RoBERTa model
+config = RobertaConfig(
+    vocab_size=vocab_size,
+    max_position_embeddings=514,
+    # num_attention_heads=12,
+    # num_hidden_layers=6,
+    # type_vocab_size=1,
+)
+# Initialize the model from a configuration without pretrained weights
+model = RobertaForMaskedLM(config=config)
+print('Num parameters: ',model.num_parameters())
 
-# initialize the model with the config
-model_config = BertConfig(vocab_size=vocab_size, max_position_embeddings=max_length)
-model = BertForMaskedLM(config=model_config)
+
+# # initialize the model with the config
+# model_config = BertConfig(vocab_size=vocab_size, max_position_embeddings=max_length)
+# model = BertForMaskedLM(config=model_config)
 
 # initialize the data collator, randomly masking 20% (default is 15%) of the tokens for the Masked Language
 # Modeling (MLM) task
