@@ -10,8 +10,9 @@ from tokenizers.processors import BertProcessing
 
 # base_dir = '/project/verma/github_data/bert_source/'
 #base_dir = '/project/verma/github_data/bert_source_v3/'
-base_dir = '..\\cbert\\DNa_data'
-model_path = "pretrained-bert-v3"
+#base_dir = '..\\cbert\\DNa_data'
+base_dir = '/project/verma/vul_dataset/dna_data/'
+model_path = "pretrained-dna-bert"
 
 # code or types
 source_code_data = load_data.load_DNa_data(base_dir, mode='code')
@@ -61,9 +62,9 @@ special_tokens = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]", "<S>", "<T>"]
 # files = ["train.txt", "test.txt"]
 # training the tokenizer on the training set
 files = [train_txt]
-
+print('111')
 # 30,522 vocab is BERT's default vocab size, feel free to tweak
-vocab_size = 60_000
+vocab_size = 100_000
 # maximum sequence length, lowering will result to faster training (when increasing batch size)
 max_length = 512 # 768
 # whether to truncate
@@ -75,6 +76,8 @@ from tokenizers import ByteLevelBPETokenizer
 # tokenizer = RobertaTokenizer()
 tokenizer = ByteLevelBPETokenizer()
 
+
+print('222')
 # # train the tokenizer
 tokenizer.train(files=files, vocab_size=vocab_size, special_tokens=special_tokens)
 
@@ -106,10 +109,14 @@ with open(os.path.join(model_path, "config.json"), "w") as f:
     }
     json.dump(tokenizer_cfg, f)
 
+print('333')
 # when the tokenizer is trained and configured, load it as BertTokenizerFast
 # tokenizer = BertTokenizerFast.from_pretrained(model_path)
 tokenizer = ByteLevelBPETokenizer.from_pretrained(model_path)
 
+print('done ... ')
+import sys
+sys.exit(0)
 
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
