@@ -5,6 +5,7 @@ import json
 import sys
 import load_data
 from tokenizers.processors import BertProcessing
+from transformers import RobertaTokenizerFast
 # download and prepare cc_news dataset
 
 
@@ -79,10 +80,12 @@ from tokenizers import ByteLevelBPETokenizer
 if pretrained_tokenizer:
     # when the tokenizer is trained and configured, load it as BertTokenizerFast
     # tokenizer = BertTokenizerFast.from_pretrained(model_path)
-    tokenizer = ByteLevelBPETokenizer(
-                os.path.join(model_path, "vocab.json"),
-                os.path.join(model_path, "merges.txt")
-                )
+    # tokenizer = ByteLevelBPETokenizer(
+    #             os.path.join(model_path, "vocab.json"),
+    #             os.path.join(model_path, "merges.txt")
+    #             )
+    # Create the tokenizer from a trained one
+    tokenizer = RobertaTokenizerFast.from_pretrained(model_path, max_len=max_length)
 else:
     # tokenizer = RobertaTokenizer()
     tokenizer = ByteLevelBPETokenizer()
@@ -123,7 +126,7 @@ tokenizer.enable_truncation(max_length=max_length)
 
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
-    return tokenizer.encode(examples["text"])
+    return tokenizer(examples["text"])
 
 # def encode_without_truncation(examples):
 #     """Mapping function to tokenize the sentences passed without truncation"""
@@ -132,6 +135,7 @@ def encode_with_truncation(examples):
 # the encode function will depend on the truncate_longer_samples variable
 encode = encode_with_truncation # if truncate_longer_samples else encode_without_truncation
 
+print('tokenizing the datasets...')
 # tokenizing the train dataset
 train_dataset = d["train"].map(encode, batched=True)
 # tokenizing the testing dataset
@@ -140,6 +144,7 @@ test_dataset = d["test"].map(encode, batched=True)
 # print(train_dataset[0])
 # print(train_dataset[1])
 # sys.exit(0)
+
 
 if truncate_longer_samples:
     # remove other columns and set input_ids and attention_mask as 
@@ -175,6 +180,7 @@ def group_texts(examples):
 #
 # To speed up this part, we use multiprocessing. See the documentation of the map method for more information:
 # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map
+
 if not truncate_longer_samples:
     train_dataset = train_dataset.map(group_texts, batched=True, batch_size=128,
                                         desc=f"Grouping texts in chunks of {max_length}")
