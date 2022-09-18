@@ -5,10 +5,13 @@ import json
 import sys
 import load_data
 from tokenizers.processors import BertProcessing
+from transformers import RobertaTokenizerFast
 # download and prepare cc_news dataset
+
 
 # base_dir = '/project/verma/github_data/bert_source/'
 #base_dir = '/project/verma/github_data/bert_source_v3/'
+#base_dir = '..\\cbert\\DNa_data'
 base_dir = '/project/verma/vul_dataset/dna_data/'
 model_path = "pretrained-dna-bert"
 pretrained_tokenizer = True
@@ -61,7 +64,7 @@ special_tokens = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]", "<S>", "<T>"]
 # files = ["train.txt", "test.txt"]
 # training the tokenizer on the training set
 files = [train_txt]
-
+print('111')
 # 30,522 vocab is BERT's default vocab size, feel free to tweak
 vocab_size = 60_000
 # maximum sequence length, lowering will result to faster training (when increasing batch size)
@@ -71,55 +74,69 @@ truncate_longer_samples = True #True
 
 # initialize the WordPiece tokenizer
 # tokenizer = BertWordPieceTokenizer()
-tokenizer = ByteLevelBPETokenizer()
+# from tokenizers import ByteLevelBPETokenizer
 
-# # train the tokenizer
-tokenizer.train(files=files, vocab_size=vocab_size, special_tokens=special_tokens)
 
+if pretrained_tokenizer:
+    # when the tokenizer is trained and configured, load it as BertTokenizerFast
+    # tokenizer = BertTokenizerFast.from_pretrained(model_path)
+    # tokenizer = ByteLevelBPETokenizer(
+    #             os.path.join(model_path, "vocab.json"),
+    #             os.path.join(model_path, "merges.txt")
+    #             )
+    # Create the tokenizer from a trained one
+    tokenizer = RobertaTokenizerFast.from_pretrained(model_path, max_len=max_length)
+else:
+    # tokenizer = RobertaTokenizer()
+    tokenizer = ByteLevelBPETokenizer()
+    print('222')
+    # # train the tokenizer
+    tokenizer.train(files=files, vocab_size=vocab_size, special_tokens=special_tokens)
+    # # # enable truncation up to the maximum 512 tokens
+    tokenizer.enable_truncation(max_length=max_length)
+    # model_path = "pretrained-bert"
+    # make the directory if not already there
+    if not os.path.isdir(model_path):
+        os.mkdir(model_path)
+    # save the tokenizer 
+    # # save the tokenizer  
+    tokenizer.save_model(model_path)
+    # dumping some of the tokenizer config to config file, 
+    # including special tokens, whether to lower case and the maximum sequence length
+    with open(os.path.join(model_path, "config.json"), "w") as f:
+        tokenizer_cfg = {
+            "do_lower_case": False,
+            "unk_token": "[UNK]",
+            "sep_token": "[SEP]",
+            "pad_token": "[PAD]",
+            "cls_token": "[CLS]",
+            "mask_token": "[MASK]",
+            "model_max_length": max_length,
+            "max_len": max_length,
+            "vocab_size": vocab_size,
+        }
+        json.dump(tokenizer_cfg, f)
+
+#tokenizer = ByteLevelBPETokenizer.from_pretrained(model_path)
+print('done ... ')
+#import sys
+#sys.exit(0)
 # # # enable truncation up to the maximum 512 tokens
+tokenizer = RobertaTokenizerFast.from_pretrained(model_path, max_len=max_length)
 tokenizer.enable_truncation(max_length=max_length)
-
-# model_path = "pretrained-bert"
-# make the directory if not already there
-if not os.path.isdir(model_path):
-    os.mkdir(model_path)
-# save the tokenizer 
-# # save the tokenizer  
-tokenizer.save_model(model_path)
-
-# sys.exit(0)
-# dumping some of the tokenizer config to config file, 
-# including special tokens, whether to lower case and the maximum sequence length
-with open(os.path.join(model_path, "config.json"), "w") as f:
-    tokenizer_cfg = {
-        "do_lower_case": False,
-        "unk_token": "[UNK]",
-        "sep_token": "[SEP]",
-        "pad_token": "[PAD]",
-        "cls_token": "[CLS]",
-        "mask_token": "[MASK]",
-        "model_max_length": max_length,
-        "max_len": max_length,
-        "vocab_size": vocab_size,
-    }
-    json.dump(tokenizer_cfg, f)
-
-# when the tokenizer is trained and configured, load it as BertTokenizerFast
-# tokenizer = BertTokenizerFast.from_pretrained(model_path)
-tokenizer = RobertaTokenizerFast.from_pretrained(model_path)
-
 
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
-    return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=max_length, return_special_tokens_mask=True)
+    return tokenizer(examples["text"])
 
-def encode_without_truncation(examples):
-    """Mapping function to tokenize the sentences passed without truncation"""
-    return tokenizer(examples["text"], return_special_tokens_mask=True)
+# def encode_without_truncation(examples):
+#     """Mapping function to tokenize the sentences passed without truncation"""
+#     return tokenizer.encode(examples["text"])
 
 # the encode function will depend on the truncate_longer_samples variable
-encode = encode_with_truncation if truncate_longer_samples else encode_without_truncation
+encode = encode_with_truncation # if truncate_longer_samples else encode_without_truncation
 
+print('tokenizing the datasets...')
 # tokenizing the train dataset
 train_dataset = d["train"].map(encode, batched=True)
 # tokenizing the testing dataset
@@ -128,6 +145,7 @@ test_dataset = d["test"].map(encode, batched=True)
 # print(train_dataset[0])
 # print(train_dataset[1])
 # sys.exit(0)
+
 
 if truncate_longer_samples:
     # remove other columns and set input_ids and attention_mask as 
@@ -163,6 +181,7 @@ def group_texts(examples):
 #
 # To speed up this part, we use multiprocessing. See the documentation of the map method for more information:
 # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map
+
 if not truncate_longer_samples:
     train_dataset = train_dataset.map(group_texts, batched=True, batch_size=128,
                                         desc=f"Grouping texts in chunks of {max_length}")
@@ -174,7 +193,8 @@ if not truncate_longer_samples:
 
 # initialize the model with the config
 model_config = BertConfig(vocab_size=vocab_size, max_position_embeddings=max_length)
-model = BertForMaskedLM(config=model_config)
+# model = BertForMaskedLM(config=model_config)
+model = RobertaForMaskedLM(config=config).cuda()
 
 # initialize the data collator, randomly masking 20% (default is 15%) of the tokens for the Masked Language
 # Modeling (MLM) task
@@ -188,9 +208,9 @@ training_args = TrainingArguments(
     evaluation_strategy="steps",    # evaluate each `logging_steps` steps
     overwrite_output_dir=True,      
     num_train_epochs=5,            # number of training epochs, feel free to tweak
-    per_device_train_batch_size=3, # the training batch size, put it as high as your GPU memory fits
+    per_device_train_batch_size=24, # the training batch size, put it as high as your GPU memory fits
     gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
-    per_device_eval_batch_size=4,  # evaluation batch size
+    per_device_eval_batch_size=24,  # evaluation batch size
     logging_steps=10000,             # evaluate, log and save model checkpoints every 1000 step
     save_steps=10000,
     load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training
