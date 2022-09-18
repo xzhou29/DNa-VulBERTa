@@ -13,6 +13,7 @@ from tokenizers.processors import BertProcessing
 #base_dir = '..\\cbert\\DNa_data'
 base_dir = '/project/verma/vul_dataset/dna_data/'
 model_path = "pretrained-dna-bert"
+pretrained_tokenizer = True
 
 # code or types
 source_code_data = load_data.load_DNa_data(base_dir, mode='code')
@@ -73,66 +74,63 @@ truncate_longer_samples = True #True
 # initialize the WordPiece tokenizer
 # tokenizer = BertWordPieceTokenizer()
 from tokenizers import ByteLevelBPETokenizer
-# tokenizer = RobertaTokenizer()
-tokenizer = ByteLevelBPETokenizer()
 
 
-print('222')
-# # train the tokenizer
-tokenizer.train(files=files, vocab_size=vocab_size, special_tokens=special_tokens)
-
-# # # enable truncation up to the maximum 512 tokens
-tokenizer.enable_truncation(max_length=max_length)
-
-# model_path = "pretrained-bert"
-# make the directory if not already there
-if not os.path.isdir(model_path):
-    os.mkdir(model_path)
-# save the tokenizer 
-# # save the tokenizer  
-tokenizer.save_model(model_path)
-
-# sys.exit(0)
-# dumping some of the tokenizer config to config file, 
-# including special tokens, whether to lower case and the maximum sequence length
-with open(os.path.join(model_path, "config.json"), "w") as f:
-    tokenizer_cfg = {
-        "do_lower_case": False,
-        "unk_token": "[UNK]",
-        "sep_token": "[SEP]",
-        "pad_token": "[PAD]",
-        "cls_token": "[CLS]",
-        "mask_token": "[MASK]",
-        "model_max_length": max_length,
-        "max_len": max_length,
-        "vocab_size": vocab_size,
-    }
-    json.dump(tokenizer_cfg, f)
-
-print('333')
-# when the tokenizer is trained and configured, load it as BertTokenizerFast
-# tokenizer = BertTokenizerFast.from_pretrained(model_path)
-tokenizer = ByteLevelBPETokenizer(
-            os.path.join(model_path, "vocab.json"),
-            os.path.join(model_path, "merges.txt")
-            )
+if pretrained_tokenizer:
+    # when the tokenizer is trained and configured, load it as BertTokenizerFast
+    # tokenizer = BertTokenizerFast.from_pretrained(model_path)
+    tokenizer = ByteLevelBPETokenizer(
+                os.path.join(model_path, "vocab.json"),
+                os.path.join(model_path, "merges.txt")
+                )
+else:
+    # tokenizer = RobertaTokenizer()
+    tokenizer = ByteLevelBPETokenizer()
+    print('222')
+    # # train the tokenizer
+    tokenizer.train(files=files, vocab_size=vocab_size, special_tokens=special_tokens)
+    # # # enable truncation up to the maximum 512 tokens
+    tokenizer.enable_truncation(max_length=max_length)
+    # model_path = "pretrained-bert"
+    # make the directory if not already there
+    if not os.path.isdir(model_path):
+        os.mkdir(model_path)
+    # save the tokenizer 
+    # # save the tokenizer  
+    tokenizer.save_model(model_path)
+    # dumping some of the tokenizer config to config file, 
+    # including special tokens, whether to lower case and the maximum sequence length
+    with open(os.path.join(model_path, "config.json"), "w") as f:
+        tokenizer_cfg = {
+            "do_lower_case": False,
+            "unk_token": "[UNK]",
+            "sep_token": "[SEP]",
+            "pad_token": "[PAD]",
+            "cls_token": "[CLS]",
+            "mask_token": "[MASK]",
+            "model_max_length": max_length,
+            "max_len": max_length,
+            "vocab_size": vocab_size,
+        }
+        json.dump(tokenizer_cfg, f)
 
 #tokenizer = ByteLevelBPETokenizer.from_pretrained(model_path)
-
 print('done ... ')
 #import sys
 #sys.exit(0)
+# # # enable truncation up to the maximum 512 tokens
+tokenizer.enable_truncation(max_length=max_length)
 
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
-    return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=max_length, return_special_tokens_mask=True)
+    return tokenizer.encode(examples["text"])
 
-def encode_without_truncation(examples):
-    """Mapping function to tokenize the sentences passed without truncation"""
-    return tokenizer(examples["text"], return_special_tokens_mask=True)
+# def encode_without_truncation(examples):
+#     """Mapping function to tokenize the sentences passed without truncation"""
+#     return tokenizer.encode(examples["text"])
 
 # the encode function will depend on the truncate_longer_samples variable
-encode = encode_with_truncation if truncate_longer_samples else encode_without_truncation
+encode = encode_with_truncation # if truncate_longer_samples else encode_without_truncation
 
 # tokenizing the train dataset
 train_dataset = d["train"].map(encode, batched=True)
