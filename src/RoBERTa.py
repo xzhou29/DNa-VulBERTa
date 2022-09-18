@@ -64,7 +64,7 @@ special_tokens = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]", "<S>", "<T>"]
 files = [train_txt]
 print('111')
 # 30,522 vocab is BERT's default vocab size, feel free to tweak
-vocab_size = 100_000
+vocab_size = 60_000
 # maximum sequence length, lowering will result to faster training (when increasing batch size)
 max_length = 512 # 768
 # whether to truncate
@@ -112,11 +112,16 @@ with open(os.path.join(model_path, "config.json"), "w") as f:
 print('333')
 # when the tokenizer is trained and configured, load it as BertTokenizerFast
 # tokenizer = BertTokenizerFast.from_pretrained(model_path)
-tokenizer = ByteLevelBPETokenizer.from_pretrained(model_path)
+tokenizer = ByteLevelBPETokenizer(
+            os.path.join(model_path, "vocab.json"),
+            os.path.join(model_path, "merges.txt")
+            )
+
+#tokenizer = ByteLevelBPETokenizer.from_pretrained(model_path)
 
 print('done ... ')
-import sys
-sys.exit(0)
+#import sys
+#sys.exit(0)
 
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
@@ -198,9 +203,9 @@ training_args = TrainingArguments(
     evaluation_strategy="steps",    # evaluate each `logging_steps` steps
     overwrite_output_dir=True,      
     num_train_epochs=5,            # number of training epochs, feel free to tweak
-    per_device_train_batch_size=3, # the training batch size, put it as high as your GPU memory fits
+    per_device_train_batch_size=24, # the training batch size, put it as high as your GPU memory fits
     gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
-    per_device_eval_batch_size=4,  # evaluation batch size
+    per_device_eval_batch_size=24,  # evaluation batch size
     logging_steps=10000,             # evaluate, log and save model checkpoints every 1000 step
     save_steps=10000,
     load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training

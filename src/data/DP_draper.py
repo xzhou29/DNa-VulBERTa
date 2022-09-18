@@ -38,7 +38,7 @@ def main():
     # def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_iter, parser_path):
     new_data_collections = Parallel(n_jobs=args.workers)\
             (delayed(de_naturalize.data_extractor)(i, 
-                                    "draper_{}_{}".format(in_file, i),
+                                    "{}_".format(in_file, i),
                                     vdisc_h45py['CWE-119'][i] or vdisc_h45py['CWE-120'][i] \
                                     or vdisc_h45py['CWE-469'][i] or vdisc_h45py['CWE-476'][i] \
                                     or vdisc_h45py['CWE-other'][i],
@@ -55,8 +55,18 @@ def main():
             index += 1
             all_new_data_collections.append(row)
     new_data = pd.DataFrame(all_new_data_collections, columns=columns)
-    new_data.to_pickle(output_filename)  
-    print('saved as: ', output_filename)
+
+    total_len = len(new_data)
+    
+    output_filename = output_filename.split('.pkl')[0]  + '_{}.pkl'
+    print(output_filename)
+    print(new_data)
+    for i in range(10):
+        new_new_data = new_data[ int(total_len * i * 0.1) : int(total_len * ( i + 1) * 0.1)]
+        new_new_data = new_new_data.reset_index()
+        new_new_data = new_new_data.drop(['level_0', 'index'], axis=1)
+        new_new_data.to_pickle(output_filename.format(i))  
+        print('saved as: ', output_filename.format(i))
 
 
 
