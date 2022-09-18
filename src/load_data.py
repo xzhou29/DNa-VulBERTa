@@ -15,8 +15,8 @@ def load_DNa_data(base_dir, mode='code'):
     loaded_data = {}
     df = {'filename': [], 'text': []}
     for filename in tqdm(file_names):
-        if 'mvdsc' not in filename:
-           continue
+        #if 'mvdsc' not in filename:
+        #   continue
         print('loading: ', filename)
         with open(filename, 'rb') as f:
             mydict = pickle.load(f)

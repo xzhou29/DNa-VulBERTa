@@ -2,6 +2,8 @@
 # from tokenizers import *
 
 from transformers import RobertaConfig
+from transformers import Trainer, TrainingArguments
+
 from transformers import RobertaForMaskedLM
 
 from tokenizers import ByteLevelBPETokenizer
@@ -83,7 +85,7 @@ truncate_longer_samples = True #True
 tokenizer = ByteLevelBPETokenizer()
 
 # # train the tokenizer
-tokenizer.train(files=files, vocab_size=vocab_size,  show_progress=True,, special_tokens=special_tokens)
+tokenizer.train(files=files, vocab_size=vocab_size,  show_progress=True, special_tokens=special_tokens)
 
 # # # enable truncation up to the maximum 512 tokens
 tokenizer.enable_truncation(max_length=max_length)
@@ -115,17 +117,13 @@ with open(os.path.join(tokenizer_path, "config.json"), "w") as f:
 
 # when the tokenizer is trained and configured, load it as BertTokenizerFast
 # tokenizer = BertTokenizerFast.from_pretrained(model_path)
+
 from transformers import RobertaTokenizerFast
+
 tokenizer = RobertaTokenizerFast.from_pretrained(tokenizer_path, max_len=max_length)
 
-# Prepare the tokenizer
-tokenizer._tokenizer.post_processor = BertProcessing(
-    ("</s>", tokenizer.token_to_id("</s>")),
-    ("<s>", tokenizer.token_to_id("<s>")),
-)
-
 # # # enable truncation up to the maximum 512 tokens
-tokenizer.enable_truncation(max_length=max_length)
+#tokenizer.enable_truncation(max_length=max_length)
 
 
 def encode_with_truncation(examples):
@@ -161,6 +159,10 @@ print('Num parameters: ',model.num_parameters())
 
 # initialize the data collator, randomly masking 20% (default is 15%) of the tokens for the Masked Language
 # Modeling (MLM) task
+
+
+from transformers import DataCollatorForLanguageModeling
+
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer, mlm=True, mlm_probability=0.15
 )
@@ -171,9 +173,9 @@ training_args = TrainingArguments(
     evaluation_strategy="steps",    # evaluate each `logging_steps` steps
     overwrite_output_dir=True,      
     num_train_epochs=5,            # number of training epochs, feel free to tweak
-    per_device_train_batch_size=3, # the training batch size, put it as high as your GPU memory fits
+    per_device_train_batch_size=10, # the training batch size, put it as high as your GPU memory fits
     gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
-    per_device_eval_batch_size=4,  # evaluation batch size
+    per_device_eval_batch_size=10,  # evaluation batch size
     logging_steps=10000,             # evaluate, log and save model checkpoints every 1000 step
     save_steps=10000,
     load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training
