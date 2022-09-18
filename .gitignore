@@ -4,3 +4,4 @@ pretrained-bert*
 venv
 wandb
 pretrained*
+BPE_tokenizer

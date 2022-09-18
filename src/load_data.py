@@ -20,19 +20,15 @@ def load_DNa_data(base_dir, mode='code'):
         print('loading: ', filename)
         with open(filename, 'rb') as f:
             mydict = pickle.load(f)
-            #print(mydict)
+            print(mydict)
             print('number of rows:', len(mydict['filename']))
             for i in range(len(mydict['filename'])):
                 # print(mydict['filename'][i], mydict['text'][i])
                 df['filename'].append(mydict['filename'][i])
                 df['text'].append(mydict[mode][i])
-           
-                #print(df)
+                # print()
         print('done...')
-    #             print(mydict['text'][i])
-    # sys.exit(0)
     df = pd.DataFrame(df)
-    # dataset = ds.dataset(pa.Table.from_pandas(df).to_batches())
     ### convert to Huggingface dataset
     hg_dataset = Dataset(pa.Table.from_pandas(df))
     return hg_dataset

@@ -1,3 +1,4 @@
+from datasets import *
 from transformers import *
 from tokenizers import *
 import os
@@ -10,8 +11,9 @@ from tokenizers.processors import BertProcessing
 
 # base_dir = '/project/verma/github_data/bert_source/'
 #base_dir = '/project/verma/github_data/bert_source_v3/'
-base_dir = '..\\cbert\\DNa_data'
-model_path = "pretrained-bert-v3"
+base_dir = '..\\cbert\\test_data\\'
+model_path = "pretrained-bert"
+
 
 # code or types
 source_code_data = load_data.load_DNa_data(base_dir, mode='code')
@@ -74,6 +76,7 @@ tokenizer = BertWordPieceTokenizer()
 
 # # train the tokenizer
 tokenizer.train(files=files, vocab_size=vocab_size, special_tokens=special_tokens)
+
 
 # # # enable truncation up to the maximum 512 tokens
 tokenizer.enable_truncation(max_length=max_length)
@@ -194,6 +197,7 @@ training_args = TrainingArguments(
     save_total_limit=5,           # whether you don't have much space so you let only 3 model weights saved in the disk
 )
 
+
 # initialize the trainer and pass everything to it
 trainer = Trainer(
     model=model,
@@ -203,5 +207,38 @@ trainer = Trainer(
     eval_dataset=test_dataset,
 )
 
+
 # train the model
 trainer.train()
+
+#     # sys.exit(0)
+# # load the model checkpoint
+# model = BertForMaskedLM.from_pretrained(os.path.join(model_path, "checkpoint-100"))
+
+# # load the tokenizer
+# tokenizer = BertTokenizerFast.from_pretrained(model_path)
+
+
+# # feature_extraction = pipeline("feature-extraction", model=model, tokenizer=tokenizer)
+# fill_mask = pipeline("fill-mask", model=model, tokenizer=tokenizer)
+# # summarization = pipeline("summarization", model=model, tokenizer=tokenizer)
+# # text_generation = pipeline("text-generation", model=model, tokenizer=tokenizer)
+
+# # perform predictions
+# examples = [
+#     "STATIC INT [MASK] LPAREN INT COMMA INT RPARENT SEMI ",
+#     "UNKID LPARENT [MASK] PLUS ",
+# ]
+
+# for example in examples:
+#     # print(example)
+#     predictions = fill_mask(example)
+#     print(len(predictions))
+#     print(predictions[0]) # top 1
+#     # print(prediction[1]) # top 2
+#     # print(prediction[2][:10]) # top 2
+#     # print(prediction[3][:10]) # top 2
+#     # print(prediction['token'])
+#     # print(prediction['token_str'])
+#     # print(f"{prediction['sequence']}, confidence: {prediction['score']}")
+#     print("="*50)
