@@ -58,6 +58,16 @@ encode = encode_with_truncation if truncate_longer_samples else encode_without_t
 train_dataset = d["train"].map(encode, batched=True)
 # tokenizing the testing dataset
 test_dataset = d["test"].map(encode, batched=True)
+
+if truncate_longer_samples:
+    # remove other columns and set input_ids and attention_mask as 
+    train_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
+    test_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
+else:
+    test_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
+    train_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
+
+
 print(train_dataset, test_dataset)
 print('dataset encoded ...')
 # ========================= encode dataset END =========================

@@ -8,7 +8,7 @@ import load_data
 from tokenizers.processors import BertProcessing
 # download and prepare cc_news dataset
 
-# ================== mannual setup START ===================
+# ================== mannual setup START===================
 base_dir = '..\\cbert\\test_data\\'
 tokenizer_folder = 'BPE_tokenizer'
 # ================== mannual setup END ===================
@@ -17,7 +17,7 @@ tokenizer_folder = 'BPE_tokenizer'
 if not os.path.isdir(tokenizer_folder):
     os.mkdir(tokenizer_folder)
 
-source_code_data = load_data. (base_dir, mode='code')
+source_code_data = load_data.load_DNa_data(base_dir, mode='code')
 d = source_code_data.train_test_split(test_size=0.05)
 print(d["train"], d["test"])
 
