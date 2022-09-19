@@ -22,6 +22,9 @@ base_dir = '..\\cbert\\test_data'
 model_path = "pretrained-dna-roberta"
 tokenizer_path = "BPE_tokenizer"
 
+if  os.path.isdir(model_path):
+    os.rmdir(model_path)
+
 # ========================= load data START =========================
 # code or types
 source_code_data = load_data.load_DNa_data(base_dir, mode='code')
@@ -46,7 +49,7 @@ print('tokenizer loaded ...')
 truncate_longer_samples = True
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
-    return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=max_length, return_special_tokens_mask=True)
+    return tokenizer(examples["text"], truncation=True, padding=True, max_length=max_length)
 
 def encode_without_truncation(examples):
     """Mapping function to tokenize the sentences passed without truncation"""
@@ -72,12 +75,11 @@ print(train_dataset, test_dataset)
 print('dataset encoded ...')
 # ========================= encode dataset END =========================
 
-
 # ========================= model setup START =========================
 # Set a configuration for our RoBERTa model
 config = RobertaConfig(
     vocab_size=vocab_size,
-    max_position_embeddings=max_length,
+    max_position_embeddings=max_length+2,
     # num_attention_heads=12,
     # num_hidden_layers=6,
     # type_vocab_size=1,
