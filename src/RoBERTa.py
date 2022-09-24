@@ -22,8 +22,10 @@ base_dir = '..\\cbert\\test_data'
 model_path = "pretrained-dna-roberta"
 tokenizer_path = "BPE_tokenizer"
 
-if  os.path.isdir(model_path):
+try:
     os.rmdir(model_path)
+except OSError as e:
+    print("Error: %s : %s" % (model_path, e.strerror))
 
 # ========================= load data START =========================
 # code or types

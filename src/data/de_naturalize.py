@@ -64,7 +64,7 @@ def denaturalize_code(code, parser_path='', mode='c', random=False):
     # code = pre_process(code)
     tokenized_code, success = language_transformers.transform_code(code, random=random)
     if not success['success']:
-        print(original_code, tokenized_code)
+        print('failed: ', original_code, tokenized_code)
     if ' @SPLIT_MARK@ ' in tokenized_code:
         tokenized_code_list = tokenized_code.split(' @SPLIT_MARK@ ')
         code = tokenized_code_list[0]
@@ -72,7 +72,7 @@ def denaturalize_code(code, parser_path='', mode='c', random=False):
     else:
         code = tokenized_code
         types = []
-    # processed_code = post_process(code, raw_code)
+    code = post_process(code, raw_code)
     return code, types, original_code
 
 
@@ -160,16 +160,9 @@ def pre_process(code):
 
 def post_process(in_code_string, raw_code):
     original_code = in_code_string
-    in_code_string, collect_strs = clean_quo(in_code_string, quo_mark='"')
-    in_code_string, _ = clean_quo(in_code_string, quo_mark="'")
     code_string_list = in_code_string.split()
     result = []
     for i, token in enumerate(code_string_list):
-        if token[0] == '"' or token[0] ==  "'":
-            # some code snippets have been broken with my quotation mark, syntax error
-            print('-'*100)
-            print(result, '\n')
-            print(raw_code, '\n')
         if is_number(token):
             for ch in token:
                 result.append(ch)
@@ -255,6 +248,8 @@ def is_hex(s):
     return all(c in string.hexdigits for c in s)
 
 
+
+
 if __name__ == '__main__':
     # test
     source_code_1 = """
@@ -273,7 +268,7 @@ if __name__ == '__main__':
                 }
             """
     source_code_2 = """
-    searchPics(const QString & text)
+    void searchPics(const QString & text)
     {
         // clear previous search results
         dropSearch();
@@ -361,7 +356,7 @@ if __name__ == '__main__':
     """
 
     source_code_3 = """
-    xmlGzfileOpenW (const char *filename, int compression) {
+    void xmlGzfileOpenW (const char *filename, int compression) {
         const char *path = NULL;
         char mode[15];
         gzFile fd;
@@ -406,7 +401,7 @@ if __name__ == '__main__':
                     + server);
     }
     """
-    source_code = source_code_4
+    source_code = source_code_2
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))     
     parser_path = os.path.join(base_dir, "parser", "languages.so")
     transformers = {
@@ -438,5 +433,6 @@ if __name__ == '__main__':
         code = tokenized_code
         types = []
     # processed_code = post_process(code, source_code)
+    code = post_process(code, source_code)
     print(code)
-    print(types)
+    # print(types)

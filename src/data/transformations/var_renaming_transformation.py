@@ -55,7 +55,9 @@ class VarRenamer(TransformationBase):
         self.language = language
         self.processor = processor_function[self.language]
         self.tokenizer_function = tokenizer_function[self.language]
-        self.random_shuffle = True
+        self.random_shuffle = False
+        self.rename_by_usage = True
+
         # C/CPP: function_declarator
         # Java: class_declaration, method_declaration
         # python: function_definition, call
@@ -134,7 +136,6 @@ class VarRenamer(TransformationBase):
         return var_names, func_names
 
     def var_renaming(self, code_string):
-
         root_node = self.parse_code(code_string)
         types = [root_node.sexp()]
         # print(root_node.sexp())
@@ -152,16 +153,39 @@ class VarRenamer(TransformationBase):
         # print('-- original_code: ', " ".join(original_code))
         var_names, func_names = self.extract_var_names(root_node, code_string)
         # var_names = sorted(var_names)
-        if self.random_shuffle:
+        if self.random_shuffle and not self.rename_by_usage:
             random.shuffle(var_names)
+        # optional
         num_to_rename = math.ceil(1.0 * len(var_names))
         var_names = var_names[:num_to_rename]
         var_map = {}
-        for idx, v in enumerate(var_names):
-            var_map[v] = f"VAR_{idx}"
+        # print(original_code)
+        # print(var_names)
+        used_names = {}
+        potential_data_types = []
+    
+        if self.rename_by_usage:
+            for idx, v in enumerate(var_names):
+                if v not in var_map:
+                    _, potential_data_types = self.var_renaming_by_usage(v, set(var_names), original_code, potential_data_types)
+            for idx, v in enumerate(var_names):
+                if v not in var_map:
+                    new_var_name, _ = self.var_renaming_by_usage(v, set(var_names), original_code, potential_data_types)
+                    if new_var_name in used_names:
+                        old_name = new_var_name
+                        new_var_name = '{}{}'.format(new_var_name, used_names[new_var_name])
+                        used_names[old_name] += 1
+                    else:
+                        used_names[new_var_name] = 1
+                    var_map[v] = new_var_name
+        else:
+            for idx, v in enumerate(var_names):
+                if v not in var_map:
+                    var_map[v] = f"VAR_{idx}"
         func_map = {}
         for idx, v in enumerate(func_names):
-            func_map[v] = f"FUNC_{idx}"
+            # func_map[v] = f"FUNC_{idx}"
+            func_map[v] = v
         modified_code = []
         for t in original_code:
             if t in var_names:
@@ -178,6 +202,144 @@ class VarRenamer(TransformationBase):
             return modified_root, modified_code_string, True
         else:
             return root_node, code_string, False
+
+
+    def var_renaming_by_usage(self, v, all_vs, original_code, potential_data_types):
+        # 4 x 2 x 4 = 32 posibilities
+        # for each catogory, we have follwings sub-catogories:
+        # types: (param, define) (use, pass, call, return)
+        # param: pass from function parameters
+        # define: it's defined in the function
+        # use: value was changed by operations
+        # call: variable was only called by others, but no changes
+        # pass: variable is passed into other function (either internal or external)
+        # return: variable is returned
+        # 1) define-use: defineUse{index}  ex. int a = 0; b = a + 1;
+        # 2) define-use-return: defineUseReturn{index} ex.  int a = 0; b = a + 1; return a;
+        # 3) define-use-pass: defineUsePass{index} ex. int a = 0; b = a + 1; memcpy(databuffer, 'a', b)
+        # 4) define-use-pass-return: defineUsePassReturn{index} ex. int a = 0; b = a + 1; memcpy(databuffer, 'a', b); return a;
+        # 5) define-use-call: defineUseCall{index} ex. int a = 0; a = a + 1; c[a] = 'A';
+        # 6) define-use-call: defineUseCallReturn{index} ex. int a = 0; a = a + 1; c[a] = 'A';
+        # 7）param-use
+        # 8）param-use-call
+        # 9）param-use-call-return
+        # ...
+        is_param = False
+        is_define = False
+        is_use = False
+        is_call = False
+        is_pass = False
+        is_return = False
+        data_type = self.get_data_type(v, original_code, potential_data_types)
+        is_param = self.is_param(v, original_code)
+        if not is_param and data_type != 'other':
+            is_define = True
+        is_use = self.is_use(v, original_code)
+        is_call = self.is_call(v, original_code)
+        is_pass = self.is_pass(v, original_code)
+        is_return = self.is_return(v, original_code)
+        new_var = data_type
+        if data_type not in potential_data_types:
+            potential_data_types.append(data_type)
+
+        if data_type == 'other' and not is_return and not is_param and not is_use:
+            return v, potential_data_types
+        if is_param:
+            new_var += 'Param'
+        if is_define:
+            new_var += 'Def'
+        if is_use:
+            new_var += 'Use'
+        if is_call:
+            new_var += 'Call'
+        if is_pass:
+            new_var += 'Pass'
+        if is_return:
+            new_var += 'Return'
+        # if data_type == 'other':
+        # print(v, new_var)
+        return new_var, potential_data_types
+
+    def get_data_type(self, v, tokens, potential_data_types):
+        for i, token in enumerate(tokens):
+            if v == token:
+                if i > 0:
+                    if tokens[i-1] == '*':
+                        return tokens[i-2] + 'Pointer'
+                    elif tokens[i-1] == 'const':
+                        return v
+                    elif tokens[i-1] in potential_data_types:
+                        return tokens[i-1] 
+                    elif tokens[i-1] in ['int', 'string', 'char', 'bool']:
+                        return tokens[i-1]
+        return 'other'
+
+    def is_param(self, v, tokens):
+        parentheses_count = -1
+        parentheses_count_start = False
+        for token in tokens:
+            if v == token:
+                return True
+            if token == '(':
+                if not parentheses_count_start:
+                    parentheses_count = 1
+                    parentheses_count_start = False
+                else:
+                    parentheses_count += 1
+            elif token == ')':
+                parentheses_count -= 1
+            if parentheses_count == 0:
+                break
+        return False
+    
+    def is_use(self, v, tokens):
+        for i, token in enumerate(tokens):
+            if i > 0:
+                if token == '=':
+                    if tokens[i-1] == v:
+                        return True
+        return False
+
+    def is_call(self, v, tokens):
+        check_start = False
+        for i, token in enumerate(tokens):
+            if check_start:
+                if v == token:
+                    return True
+                if token == ';':
+                    check_start = False
+            if token == '=':
+                check_start = True
+        return False
+
+    def is_pass(self, v, tokens):
+        # func(a, b, v);
+        check_start = False
+        skip_first = True
+        for i, token in enumerate(tokens):
+            if check_start:
+                if token == v:
+                    return True
+                if token == ')':
+                    check_start = False
+            if token == '(':
+                if skip_first:
+                    skip_first = False
+                else:
+                    check_start = True
+        return False
+
+    def is_return(self, v, tokens):
+        check_start = False
+        for i, token in enumerate(tokens):
+            if check_start:
+                if v == token:
+                    return True
+                if token == ';':
+                    check_start = False
+            if token == 'return':
+                check_start = True
+        return False
 
     def transform_code(
             self,
