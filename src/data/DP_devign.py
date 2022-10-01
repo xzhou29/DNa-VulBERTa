@@ -21,6 +21,8 @@ def main():
                         default=1, type=int)
     parser.add_argument('--iter', required=False, help='number of denaturalize_iter',
                         default=1, type=int)
+    parser.add_argument('--all', required=False, help='set TRUE for all',
+                    default=0, type=bool)
     args = parser.parse_args()
 
     denaturalize_iter = args.iter
@@ -35,11 +37,12 @@ def main():
     # print(data[:1])
     # sys.exit(0)
     # 0.8/0.1/0.1
-    data = data[:int(len(data) * 0.8)]
+    if not args.all:
+        data = data[:int(len(data) * 0.8)]
 
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
     parser_path = os.path.join(base_dir, "parser", "languages.so")
-    columns=['index', 'filename', 'code', 'types']
+    columns=['index', 'filename', 'code', 'types', 'label']
 
     # def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_iter, parser_path):
     new_data_collections = Parallel(n_jobs=args.workers)\

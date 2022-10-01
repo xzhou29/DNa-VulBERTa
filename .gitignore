@@ -5,3 +5,6 @@ venv
 wandb
 pretrained*
 BPE_tokenizer
+reports
+*checkpoints*
+*result_*

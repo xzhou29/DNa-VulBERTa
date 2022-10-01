@@ -13,7 +13,7 @@ def load_DNa_data(base_dir, mode='code'):
     # file_names = glob.glob(os.path.join('/scratch/xin/bert_source/top_60_cpp_topological/', 'data_10000.pkl'), recursive=False)
     file_names = glob.glob(os.path.join(base_dir, '*.pkl'), recursive=True)
     loaded_data = {}
-    df = {'filename': [], 'text': []}
+    df = {'filename': [], 'text': [], 'label': []}
     for filename in tqdm(file_names):
         #if 'mvdsc' not in filename:
         #   continue
@@ -26,6 +26,8 @@ def load_DNa_data(base_dir, mode='code'):
                 # print(mydict['filename'][i], mydict['text'][i])
                 df['filename'].append(mydict['filename'][i])
                 df['text'].append(mydict[mode][i])
+                if 'label' in mydict:
+                    df['label'] = mydict['label'][i]
                 # print()
         print('done...')
     df = pd.DataFrame(df)
