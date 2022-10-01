@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--iter', required=False, help='number of denaturalize_iter',
                         default=1, type=int)
     parser.add_argument('--all', required=False, help='set TRUE for all',
-                    default=0, type=bool)
+                    default=1, type=bool)
     args = parser.parse_args()
 
     denaturalize_iter = args.iter
