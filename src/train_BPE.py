@@ -17,9 +17,24 @@ tokenizer_folder = 'BPE_tokenizer'
 if not os.path.isdir(tokenizer_folder):
     os.mkdir(tokenizer_folder)
 
-source_code_data = load_data.load_DNa_data(base_dir, mode='code')
+# ================== loading raw data START===================
+source_code_data = load_data.load_DNa_data(base_dir, mode='types')
 d = source_code_data.train_test_split(test_size=0.05)
-print(d["train"], d["test"])
+
+
+words = {}
+for i in range(len(d["train"])):
+    text = d["train"][i]['text']
+    for t in text.split():
+        if t not in words:
+            words[t] = 1
+
+vocab_size = len(words)
+
+# ================== loading raw data START===================
+
+
+
 
 def dataset_to_text(dataset, output_filename="data.txt"):
     """Utility function to save dataset text to disk,
@@ -41,7 +56,7 @@ files = [train_txt]
 
 # Initialize a tokenizer
 tokenizer = ByteLevelBPETokenizer(lowercase=True)
-vocab_size = 50000
+# vocab_size = 50000
 min_frequency = 2
 max_length = 512
 # Customize training

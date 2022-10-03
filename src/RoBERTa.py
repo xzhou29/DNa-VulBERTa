@@ -19,6 +19,7 @@ from tokenizers.processors import BertProcessing
 
 # ========================= directories =========================
 base_dir = '..\\cbert\\test_data'
+# base_dir = '..\\cbert\\DNa_data'
 model_path = "pretrained-dna-roberta"
 tokenizer_path = "BPE_tokenizer"
 
@@ -34,6 +35,8 @@ source_code_data = load_data.load_DNa_data(base_dir, mode='code')
 d = source_code_data.train_test_split(test_size=0.05)
 print(d["train"], d["test"])
 print('data loaded ...')
+# print(len(d["train"][0]['text']))
+# sys.exit(0)
 # ========================= load data END =========================
 
 # ========================= load tokenizer START =========================

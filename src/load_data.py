@@ -15,8 +15,8 @@ def load_DNa_data(base_dir, mode='code'):
     loaded_data = {}
     df = {'filename': [], 'text': [], 'label': []}
     for filename in tqdm(file_names):
-        #if 'mvdsc' not in filename:
-        #   continue
+        # if 'sysevr_api_fc_train' not in filename:
+            # continue
         print('loading: ', filename)
         with open(filename, 'rb') as f:
             mydict = pickle.load(f)
@@ -25,13 +25,28 @@ def load_DNa_data(base_dir, mode='code'):
             for i in range(len(mydict['filename'])):
                 # print(mydict['filename'][i], mydict['text'][i])
                 df['filename'].append(mydict['filename'][i])
-                df['text'].append(mydict[mode][i])
+                # print(mydict[mode][i])
+                text = mydict[mode][i]
+                text = preprocess(text)
+                df['text'].append(text)
                 if 'label' in mydict:
                     df['label'] = mydict['label'][i]
                 # print()
         print('done...')
+    if len(df['label']) == 0:
+        del df['label']
     df = pd.DataFrame(df)
     ### convert to Huggingface dataset
     hg_dataset = Dataset(pa.Table.from_pandas(df))
     return hg_dataset
 
+
+def preprocess(text):
+    if not text:
+        return 'None'
+    for s in ['(', ')', ':']:
+        text = text.split(s)
+        replace = ' {} '.format(s)
+        text = replace.join(text)
+    text = ' '.join(text.split())
+    return text
