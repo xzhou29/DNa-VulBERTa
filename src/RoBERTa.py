@@ -30,23 +30,28 @@ except OSError as e:
 
 # ========================= load data START =========================
 # code or types
-source_code_data = load_data.load_DNa_data(base_dir, mode='code')
+source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=512)
 # split the dataset into training (90%) and testing (10%)
 d = source_code_data.train_test_split(test_size=0.05)
 print(d["train"], d["test"])
 print('data loaded ...')
-# print(len(d["train"][0]['text']))
-# sys.exit(0)
 # ========================= load data END =========================
 
+
 # ========================= load tokenizer START =========================
-# 30,522 vocab is BERT's default vocab size, feel free to tweak
-vocab_size = 50_000
+# ================== loading raw data START===================
 # maximum sequence length, lowering will result to faster training (when increasing batch size)
 max_length = 512 # 768
 from transformers import RobertaTokenizerFast
 tokenizer = RobertaTokenizerFast.from_pretrained(tokenizer_path, max_len=max_length)
+# 30,522 vocab is BERT's default vocab size, feel free to tweak
+vocab_size = tokenizer.vocab_size
+print('vocab_size: ', tokenizer.vocab_size)
 print('tokenizer loaded ...')
+
+print((d["train"][0]['text']))
+print(len((d["train"][0]['text']).split()))
+# sys.exit(0)
 # ========================= load tokenizer END =========================
 
 
@@ -71,9 +76,9 @@ if truncate_longer_samples:
     # remove other columns and set input_ids and attention_mask as 
     train_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
     test_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
-else:
-    test_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
-    train_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
+# else:
+#     test_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
+#     train_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
 
 
 print(train_dataset, test_dataset)
@@ -107,8 +112,8 @@ training_args = TrainingArguments(
     per_device_train_batch_size=6, # the training batch size, put it as high as your GPU memory fits
     gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
     per_device_eval_batch_size=6,  # evaluation batch size
-    logging_steps=500,             # evaluate, log and save model checkpoints every 1000 step
-    save_steps=500,
+    logging_steps=5000,             # evaluate, log and save model checkpoints every 1000 step
+    save_steps=5000,
     load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training
     save_total_limit=5,           # whether you don't have much space so you let only 3 model weights saved in the disk
 )
@@ -121,7 +126,6 @@ trainer = Trainer(
     eval_dataset=test_dataset,
 )
 # ========================= model setup END =========================
-
 
 
 # train the model

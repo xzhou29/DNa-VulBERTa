@@ -401,7 +401,33 @@ if __name__ == '__main__':
                     + server);
     }
     """
-    source_code = source_code_2
+    source_code_5 = """
+int binarySearch(int arr[], int l, int r, int x)
+{
+    if (r >= l) {
+        int mid = l + (r - l) / 2;
+ 
+        // If the element is present at the middle
+        // itself
+        if (arr[mid] == x)
+            return mid;
+ 
+        // If element is smaller than mid, then
+        // it can only be present in left subarray
+        if (arr[mid] > x)
+            return binarySearch(arr, l, mid - 1, x);
+ 
+        // Else the element can only be present
+        // in right subarray
+        return binarySearch(arr, mid + 1, r, x);
+    }
+ 
+    // We reach here when element is not
+    // present in array
+    return -1;
+}
+    """
+    source_code = source_code_5
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))     
     parser_path = os.path.join(base_dir, "parser", "languages.so")
     transformers = {
@@ -434,5 +460,7 @@ if __name__ == '__main__':
         types = []
     # processed_code = post_process(code, source_code)
     code = post_process(code, source_code)
-    print(code)
+    print(code.split())
+    print(len(code.split()))
+    # print(types)
     # print(types)

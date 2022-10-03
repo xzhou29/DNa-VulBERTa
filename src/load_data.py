@@ -7,7 +7,7 @@ import os
 import pickle 
 from tqdm import tqdm
 
-def load_DNa_data(base_dir, mode='code'):
+def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512):
     # each instance is a dictionary as:  ['filename', 'code']
     # TODO test with only one file 
     # file_names = glob.glob(os.path.join('/scratch/xin/bert_source/top_60_cpp_topological/', 'data_10000.pkl'), recursive=False)
@@ -20,26 +20,27 @@ def load_DNa_data(base_dir, mode='code'):
         print('loading: ', filename)
         with open(filename, 'rb') as f:
             mydict = pickle.load(f)
-            print(mydict)
             print('number of rows:', len(mydict['filename']))
             for i in range(len(mydict['filename'])):
-                # print(mydict['filename'][i], mydict['text'][i])
-                df['filename'].append(mydict['filename'][i])
-                # print(mydict[mode][i])
                 text = mydict[mode][i]
                 text = preprocess(text)
-                df['text'].append(text)
-                if 'label' in mydict:
+                if truncate_split:
+                    texts = process_truncate_split(text, max_length=max_len)
+                    for index, t in enumerate(texts):
+                        df['filename'].append(mydict['filename'][i]+str(index))
+                        df['text'].append(t)
+                        df['label'] = mydict['label'][i]
+                else:
+                    df['filename'].append(mydict['filename'][i])
+                    df['text'].append(text)
                     df['label'] = mydict['label'][i]
                 # print()
         print('done...')
-    if len(df['label']) == 0:
-        del df['label']
+
     df = pd.DataFrame(df)
     ### convert to Huggingface dataset
     hg_dataset = Dataset(pa.Table.from_pandas(df))
     return hg_dataset
-
 
 def preprocess(text):
     if not text:
@@ -50,3 +51,19 @@ def preprocess(text):
         text = replace.join(text)
     text = ' '.join(text.split())
     return text
+
+
+def process_truncate_split(text, max_length):
+    text_s = text.split()
+    texts = []
+    if len(text_s) > max_length:
+        iterations = len(text_s) // max_length
+        for i in range(iterations):
+            if i == iterations - 1:
+                new_t = text_s[max_length * (i):]
+            else:
+                new_t = text_s[max_length * (i) : max_length * (i + 1)]
+            texts.append(' '.join(new_t))
+        return texts
+    else:
+        return [text]

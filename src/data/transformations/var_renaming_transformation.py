@@ -57,7 +57,7 @@ class VarRenamer(TransformationBase):
         self.tokenizer_function = tokenizer_function[self.language]
         self.random_shuffle = False
         self.rename_by_usage = True
-
+        self.ignored_types = {'translation_unit'}
         # C/CPP: function_declarator
         # Java: class_declaration, method_declaration
         # python: function_definition, call
@@ -109,6 +109,7 @@ class VarRenamer(TransformationBase):
         func_names = []
         queue = [root]
         types = []
+        var_to_type = {}
         while len(queue) > 0:
             current_node = queue[0]
             queue = queue[1:]
@@ -123,17 +124,22 @@ class VarRenamer(TransformationBase):
             var_name = token_list[0]
             # identifier_types = ["identifier", "variable_name", 'field_identifier', 'type_identifier', 'statement_identifier']
             identifier_types = ["identifier", "variable_name"]
+            if var_name not in var_to_type:
+                this_type = current_node.type
+                if this_type not in self.ignored_types:
+                    var_to_type[var_name] = this_type
             if current_node.type in identifier_types and str(current_node.parent.type) not in self.not_var_ptype:
                 # whitelist is a set of collected strings: c programming syntax, function call, etc.
-                if var_name.lower() not in self.whitelist:
+                if var_name.lower() not in self.whitelist and var_name not in var_names:
                     var_names.append(var_name)
             elif current_node.type == 'function_declarator':
                 func_names.append(var_name)
             elif var_name.startswith('VAR_'):
-                var_names.append(var_name)
+                if var_name not in var_names:
+                    var_names.append(var_name)
             for child in current_node.children:
                 queue.append(child)
-        return var_names, func_names
+        return var_names, func_names, var_to_type
 
     def var_renaming(self, code_string):
         root_node = self.parse_code(code_string)
@@ -151,7 +157,7 @@ class VarRenamer(TransformationBase):
         # print(function_name_node.end_point)
         original_code = self.tokenizer_function(code_string, root_node)
         # print('-- original_code: ', " ".join(original_code))
-        var_names, func_names = self.extract_var_names(root_node, code_string)
+        var_names, func_names, var_to_type = self.extract_var_names(root_node, code_string)
         # var_names = sorted(var_names)
         if self.random_shuffle and not self.rename_by_usage:
             random.shuffle(var_names)
@@ -163,7 +169,6 @@ class VarRenamer(TransformationBase):
         # print(var_names)
         used_names = {}
         potential_data_types = []
-    
         if self.rename_by_usage:
             for idx, v in enumerate(var_names):
                 if v not in var_map:
@@ -188,12 +193,15 @@ class VarRenamer(TransformationBase):
             func_map[v] = v
         modified_code = []
         for t in original_code:
+            if t in var_to_type:
+                modified_code.append(var_to_type[t])
             if t in var_names:
                 modified_code.append(var_map[t])
             elif t in func_names:
                 modified_code.append(func_map[t])
             else:
                 modified_code.append(t)
+
         modified_code_string = " ".join(modified_code)
 
         if modified_code != original_code:
