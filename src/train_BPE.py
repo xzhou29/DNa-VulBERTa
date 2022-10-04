@@ -28,10 +28,11 @@ for i in range(len(d["train"])):
         if t not in words:
             words[t] = 1
 
+
 vocab_size = len(words)
-print(vocab_size)
+print('vocab_size: ', vocab_size)
 min_frequency = 2
-max_length = 512
+# max_length = 512
 
 # ================== loading raw data START===================
 def dataset_to_text(dataset, output_filename="data.txt"):
@@ -39,18 +40,7 @@ def dataset_to_text(dataset, output_filename="data.txt"):
     useful for using the texts to train the tokenizer 
     (as the tokenizer accepts files)"""
     with open(output_filename, "w") as f:
-        for t in dataset["text"]:
-            t_splited = t.split()
-            if len(t_splited) > max_length:
-                iterations = len(t_splited) // max_length
-                for i in range(iterations):
-                    if i == iterations - 1:
-                        new_t = t_splited[max_length * (i):]
-                    else:
-                        new_t = t_splited[max_length * (i) : max_length * (i + 1)]
-                    print(' '.join(new_t), file=f)
-            else:
-                print(t, file=f)
+        print(t, file=f)
 
 # save the training set to train.txt
 train_txt = os.path.join(tokenizer_folder, "train.txt")
@@ -65,29 +55,35 @@ dataset_to_text(d["test"], test_txt)
 files = [train_txt]
 
 # Initialize a tokenizer
-tokenizer = ByteLevelBPETokenizer(lowercase=True)
+tokenizer = ByteLevelBPETokenizer(lowercase=False)
 
 # Customize training
 tokenizer.train(files=files, vocab_size=vocab_size, min_frequency=min_frequency,
                 show_progress=True,
                 special_tokens=[
-                                "<s>",
-                                "<pad>",
-                                "</s>",
-                                "<unk>",
-                                "<mask>",
+                                "[S]",
+                                "[/S]",
+                                "[PAD]",
+                                "[UNK]",
+                                "[CLS]",
+                                "[MASK]",
 ])
+
+
+# print('vocab_size: ', tokenizer.get_vocab_size.vocabulary_size, type(tokenizer.get_vocab_size))
+
 with open(os.path.join(tokenizer_folder, "config.json"), "w") as f:
     tokenizer_cfg = {
         "do_lower_case": False,
-        "unk_token": "[unk]",
-        "pad_token": "[pad]",
-        "mask_token": "[mask]",
-        "BOS_token": "<s>", # begining of sentence
-        "EOS": "</s>",  # end of sentence
+        "unk_token": "[UNK]",
+        "pad_token": "[PAD]",
+        "mask_token": "[MASK]",
+        "BOS_token": "[S]", # begining of sentence
+        "EOS": "[/S]",  # end of sentence
         # "model_max_length": max_length,
-        "max_len": max_length,
+        # "max_len": max_length,
         "vocab_size": vocab_size,
     }
     json.dump(tokenizer_cfg, f)
+
 tokenizer.save_model(tokenizer_folder)

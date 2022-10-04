@@ -45,7 +45,7 @@ max_length = 512 # 768
 from transformers import RobertaTokenizerFast
 tokenizer = RobertaTokenizerFast.from_pretrained(tokenizer_path, max_len=max_length)
 # 30,522 vocab is BERT's default vocab size, feel free to tweak
-vocab_size = tokenizer.vocab_size
+vocab_size = tokenizer.vocab_size + 10
 print('vocab_size: ', tokenizer.vocab_size)
 print('tokenizer loaded ...')
 
@@ -76,9 +76,9 @@ if truncate_longer_samples:
     # remove other columns and set input_ids and attention_mask as 
     train_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
     test_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
-# else:
-#     test_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
-#     train_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
+else:
+    test_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
+    train_dataset.set_format(columns=["input_ids", "attention_mask", "special_tokens_mask"])
 
 
 print(train_dataset, test_dataset)
@@ -104,14 +104,15 @@ data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer, mlm=True, mlm_probability=0.15
 )
 
+batch_size_per_gpu = 1
 training_args = TrainingArguments(
     output_dir=model_path,          # output directory to where save model checkpoint
     evaluation_strategy="steps",    # evaluate each `logging_steps` steps
     overwrite_output_dir=True,      
     num_train_epochs=5,            # number of training epochs, feel free to tweak
-    per_device_train_batch_size=6, # the training batch size, put it as high as your GPU memory fits
+    per_device_train_batch_size=batch_size_per_gpu, # the training batch size, put it as high as your GPU memory fits
     gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
-    per_device_eval_batch_size=6,  # evaluation batch size
+    per_device_eval_batch_size=batch_size_per_gpu,  # evaluation batch size
     logging_steps=5000,             # evaluate, log and save model checkpoints every 1000 step
     save_steps=5000,
     load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training

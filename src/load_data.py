@@ -29,11 +29,11 @@ def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512):
                     for index, t in enumerate(texts):
                         df['filename'].append(mydict['filename'][i]+str(index))
                         df['text'].append(t)
-                        df['label'] = mydict['label'][i]
+                        df['label'].append(mydict['label'][i])
                 else:
                     df['filename'].append(mydict['filename'][i])
                     df['text'].append(text)
-                    df['label'] = mydict['label'][i]
+                    df['label'].append(mydict['label'][i])
                 # print()
         print('done...')
 
