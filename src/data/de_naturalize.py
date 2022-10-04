@@ -402,30 +402,15 @@ if __name__ == '__main__':
     }
     """
     source_code_5 = """
-int binarySearch(int arr[], int l, int r, int x)
-{
-    if (r >= l) {
-        int mid = l + (r - l) / 2;
- 
-        // If the element is present at the middle
-        // itself
-        if (arr[mid] == x)
-            return mid;
- 
-        // If element is smaller than mid, then
-        // it can only be present in left subarray
-        if (arr[mid] > x)
-            return binarySearch(arr, l, mid - 1, x);
- 
-        // Else the element can only be present
-        // in right subarray
-        return binarySearch(arr, mid + 1, r, x);
+    #include <stdio.h>
+    #include <string.h>
+    int main() {
+        char str1[20] = "C programming";
+        char str2[20];
+        strcpy(str2, str1);
+        puts(str2);
+        return 0;
     }
- 
-    // We reach here when element is not
-    // present in array
-    return -1;
-}
     """
     source_code = source_code_5
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))     
@@ -460,7 +445,8 @@ int binarySearch(int arr[], int l, int r, int x)
         types = []
     # processed_code = post_process(code, source_code)
     code = post_process(code, source_code)
-    print(code.split())
+    print(code)
+    # print(code.split())
     print(len(code.split()))
     # print(types)
     # print(types)

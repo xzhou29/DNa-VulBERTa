@@ -126,7 +126,7 @@ class VarRenamer(TransformationBase):
             identifier_types = ["identifier", "variable_name"]
             if var_name not in var_to_type:
                 this_type = current_node.type
-                if this_type not in self.ignored_types:
+                if len(this_type) > 2 and this_type not in self.ignored_types:
                     var_to_type[var_name] = this_type
             if current_node.type in identifier_types and str(current_node.parent.type) not in self.not_var_ptype:
                 # whitelist is a set of collected strings: c programming syntax, function call, etc.
