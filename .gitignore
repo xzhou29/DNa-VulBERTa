@@ -8,3 +8,4 @@ BPE_tokenizer
 *checkpoints*
 *result_*
 *_tokenizer
+tokenizer.*

@@ -49,8 +49,8 @@ print(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length
 print(len(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length=max_length)['input_ids']))
 
 # 30,522 vocab is BERT's default vocab size, feel free to tweak
-vocab_size = tokenizer.vocab_size + 5
-print('vocab_size: ', tokenizer.vocab_size)
+vocab_size = 32000
+print('vocab_size: ', vocab_size)
 print('tokenizer loaded ...')
 
 print((d["train"][0]['text']))
@@ -111,29 +111,35 @@ config = transformers.AlbertConfig(
 model = transformers.AlbertForMaskedLM(config=config)
 
 import torch
-dataset_mod = []
+dataset_mod_train = []
 for item in train_dataset['input_ids']:
-    dataset_mod.append(torch.tensor(item))
-    
+    dataset_mod_train.append(torch.tensor(item))
+
+dataset_mod_test = []
+for item in test_dataset['input_ids']:
+    dataset_mod_test.append(torch.tensor(item))
+
 print('Num parameters: ',model.num_parameters())
 # initialize the data collator, randomly masking 20% (default is 15%) of the tokens for the Masked Language
 # Modeling (MLM) task
 from transformers import DataCollatorForLanguageModeling
 data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer, mlm=True, mlm_probability=0.15
+    tokenizer=tokenizer, mlm=True, mlm_probability=0.20
 )
+print('start training...')
 
-batch_size_per_gpu = 2
+batch_size_per_gpu = 5
+save_step = 5000
 training_args = TrainingArguments(
     output_dir=model_path,          # output directory to where save model checkpoint
     evaluation_strategy="steps",    # evaluate each `logging_steps` steps
     overwrite_output_dir=True,      
-    num_train_epochs=5,            # number of training epochs, feel free to tweak
+    num_train_epochs=50,            # number of training epochs, feel free to tweak
     per_device_train_batch_size=batch_size_per_gpu, # the training batch size, put it as high as your GPU memory fits
     gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
     per_device_eval_batch_size=batch_size_per_gpu,  # evaluation batch size
-    logging_steps=5000,             # evaluate, log and save model checkpoints every 1000 step
-    save_steps=5000,
+    logging_steps=save_step,             # evaluate, log and save model checkpoints every 1000 step
+    save_steps=save_step,
     load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training
     save_total_limit=5,           # whether you don't have much space so you let only 3 model weights saved in the disk
 )
@@ -142,8 +148,8 @@ trainer = Trainer(
     model=model,
     args=training_args,
     data_collator=data_collator,
-    train_dataset=dataset_mod,
-    eval_dataset=dataset_mod,
+    train_dataset=dataset_mod_train,
+    eval_dataset=dataset_mod_test,
 )
 # ========================= model setup END =========================
 

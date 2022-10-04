@@ -51,6 +51,12 @@ files = [train_txt]
 # ================== SentencePieceBPETokenizer START===================
 # from tokenizers import SentencePieceBPETokenizer
 import sentencepiece as spm
-spm.SentencePieceTrainer.train(input=files, model_prefix="tokenizer", vocab_size=32000)
+# SentencePiece needs lots of RAM. OOM error is possible. so we set input_sentence_size=500000
+spm.SentencePieceTrainer.train(input=files, model_prefix="tokenizer", vocab_size=32000,
+                                shuffle_input_sentence=True,
+                                input_sentence_size=500000,
+                                train_extremely_large_corpus=False,
+                                )
+# https://discuss.huggingface.co/t/training-albert-from-scratch-with-distributed-training/1260
 # ================== SentencePieceBPETokenizer END===================
 
