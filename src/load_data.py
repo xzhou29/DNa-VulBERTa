@@ -7,13 +7,15 @@ import os
 import pickle 
 from tqdm import tqdm
 
-def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512):
+def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512, ignore_label=True):
     # each instance is a dictionary as:  ['filename', 'code']
     # TODO test with only one file 
     # file_names = glob.glob(os.path.join('/scratch/xin/bert_source/top_60_cpp_topological/', 'data_10000.pkl'), recursive=False)
     file_names = glob.glob(os.path.join(base_dir, '*.pkl'), recursive=True)
     loaded_data = {}
     df = {'filename': [], 'text': [], 'label': []}
+    if ignore_label:
+        df = {'filename': [], 'text': []}
     for filename in tqdm(file_names):
         # if 'sysevr_api_fc_train' not in filename:
             # continue
@@ -29,11 +31,13 @@ def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512):
                     for index, t in enumerate(texts):
                         df['filename'].append(mydict['filename'][i]+str(index))
                         df['text'].append(t)
-                        df['label'].append(mydict['label'][i])
+                        if not ignore_label:
+                            df['label'].append(mydict['label'][i])
                 else:
                     df['filename'].append(mydict['filename'][i])
                     df['text'].append(text)
-                    df['label'].append(mydict['label'][i])
+                    if not ignore_label:
+                        df['label'].append(mydict['label'][i])
                 # print()
         print('done...')
 
