@@ -7,3 +7,4 @@ pretrained*
 BPE_tokenizer
 *checkpoints*
 *result_*
+*_tokenizer

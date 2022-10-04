@@ -30,7 +30,8 @@ except OSError as e:
 
 # ========================= load data START =========================
 # code or types
-source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=512)
+# BPE tokenizer will have longer set of tokens
+source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=256)
 # split the dataset into training (90%) and testing (10%)
 d = source_code_data.train_test_split(test_size=0.05)
 print(d["train"], d["test"])
@@ -90,9 +91,12 @@ print('dataset encoded ...')
 config = RobertaConfig(
     vocab_size=vocab_size,
     max_position_embeddings=max_length+2,
-    # num_attention_heads=12,
-    # num_hidden_layers=6,
-    # type_vocab_size=1,
+    num_attention_heads = 12,
+    num_hidden_layers = 12,
+    hidden_size = 768,
+    intermediate_size = 3072,
+    hidden_act = 'gelu',
+    hidden_dropout_prob = 0.1
 )
 # Initialize the model from a configuration without pretrained weights
 model = RobertaForMaskedLM(config=config)
