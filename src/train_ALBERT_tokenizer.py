@@ -19,7 +19,21 @@ if not os.path.isdir(tokenizer_folder):
     os.mkdir(tokenizer_folder)
 
 # ================== loading raw data START===================
-source_code_data = load_data.load_DNa_data(base_dir, mode='code')
+source_code_data = load_data.load_DNa_data(base_dir, mode='types')
+
+# print(source_code_data)
+types = {}
+# print(source_code_data['text'])
+for text in source_code_data['text']:
+    for token in text.split():
+        types[token] = 1
+    
+print(types)
+print(len(types))
+for t in types:
+    print(t)
+sys.exit(0)
+
 d = source_code_data.train_test_split(test_size=0.05)
 
 vocab_size = 32000

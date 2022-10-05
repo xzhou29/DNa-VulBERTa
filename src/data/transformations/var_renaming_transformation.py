@@ -57,7 +57,7 @@ class VarRenamer(TransformationBase):
         self.tokenizer_function = tokenizer_function[self.language]
         self.random_shuffle = False
         self.rename_by_usage = True
-        self.ignored_types = {'translation_unit'}
+        self.taggers = self.get_taggers('support_files/taggers.txt')
         # C/CPP: function_declarator
         # Java: class_declaration, method_declaration
         # python: function_definition, call
@@ -67,6 +67,15 @@ class VarRenamer(TransformationBase):
         # print(len(self.whitelist))
         self.not_var_ptype = ["function_declarator", "class_declaration", "method_declaration", "function_definition",
                               "function_declaration", "call", "local_function_statement"]
+    def get_taggers(self, filename):
+        ignored = {}
+        with open(filename, 'r') as f:
+            s = f.readlines()
+            for token in s:
+                split_tokens = token.split()
+                if split_tokens[1] != 'na':
+                    ignored[split_tokens[0]] = split_tokens[1]
+        return  ignored
 
     def get_whitelist(self):
         whitelist = []
@@ -126,7 +135,7 @@ class VarRenamer(TransformationBase):
             identifier_types = ["identifier", "variable_name"]
             if var_name not in var_to_type:
                 this_type = current_node.type
-                if len(this_type) > 2 and this_type not in self.ignored_types:
+                if len(this_type) > 2 and this_type in self.taggers:
                     var_to_type[var_name] = this_type
             if current_node.type in identifier_types and str(current_node.parent.type) not in self.not_var_ptype:
                 # whitelist is a set of collected strings: c programming syntax, function call, etc.

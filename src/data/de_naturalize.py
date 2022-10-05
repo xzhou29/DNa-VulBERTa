@@ -405,6 +405,7 @@ if __name__ == '__main__':
     #include <stdio.h>
     #include <string.h>
     int main() {
+        bool a = 1;
         char str1[20] = "C programming";
         char str2[20];
         strcpy(str2, str1);
@@ -412,7 +413,7 @@ if __name__ == '__main__':
         return 0;
     }
     """
-    source_code = source_code_5
+    source_code = source_code_4
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))     
     parser_path = os.path.join(base_dir, "parser", "languages.so")
     transformers = {
