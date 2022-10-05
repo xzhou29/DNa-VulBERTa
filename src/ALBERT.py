@@ -45,7 +45,7 @@ max_length = 512 # 768
 tokenizer = transformers.AlbertTokenizer.from_pretrained("tokenizer.model")
 
 print(len(d["train"][0]['text'].split()))
-print(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length=max_length))
+# print(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length=max_length))
 print(len(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length=max_length)['input_ids']))
 
 # 30,522 vocab is BERT's default vocab size, feel free to tweak

@@ -40,6 +40,20 @@ def dataset_to_text(dataset, output_filename="data.txt"):
 train_txt = os.path.join(tokenizer_folder, "train.txt")
 test_txt = os.path.join(tokenizer_folder, "test.txt")
 
+
+words = {}
+for data in d["train"]['text']:
+    for token in data.split():
+        if token not in words:
+            words[token] = 1
+        else:
+            words[token] += 1
+print('total unique words: ', len(words))
+print('total unique words - frequency > 1:', len([w for w in words if words[w] > 1]))
+print('total unique words - frequency > 2:', len([w for w in words if words[w] > 2]))
+sys.exit(0)
+
+
 dataset_to_text(d["train"], train_txt)
 # save the testing set to test.txt
 dataset_to_text(d["test"], test_txt)
