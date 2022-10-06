@@ -23,7 +23,7 @@ def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512, igno
         with open(filename, 'rb') as f:
             mydict = pickle.load(f)
             print('number of rows:', len(mydict['filename']))
-            for i in range(len(mydict['filename'])):
+            for i in range(len(mydict['filename'][:1000])):
                 text = mydict[mode][i]
                 text = preprocess(text)
                 if truncate_split:
@@ -61,10 +61,10 @@ def process_truncate_split(text, max_length):
     text_s = text.split()
     texts = []
     if len(text_s) > max_length:
-        iterations = len(text_s) // max_length
+        iterations = len(text_s) // max_length + 1
         for i in range(iterations):
             if i == iterations - 1:
-                new_t = text_s[max_length * (i):]
+                new_t = text_s[max_length * (i): ]
             else:
                 new_t = text_s[max_length * (i) : max_length * (i + 1)]
             texts.append(' '.join(new_t))

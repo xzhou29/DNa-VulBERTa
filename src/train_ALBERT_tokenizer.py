@@ -22,17 +22,17 @@ if not os.path.isdir(tokenizer_folder):
 source_code_data = load_data.load_DNa_data(base_dir, mode='types')
 
 # print(source_code_data)
-types = {}
-# print(source_code_data['text'])
-for text in source_code_data['text']:
-    for token in text.split():
-        types[token] = 1
+# types = {}
+# # print(source_code_data['text'])
+# for text in source_code_data['text']:
+#     for token in text.split():
+#         types[token] = 1
     
-print(types)
-print(len(types))
-for t in types:
-    print(t)
-sys.exit(0)
+# print(types)
+# print(len(types))
+# for t in types:
+#     print(t)
+# sys.exit(0)
 
 d = source_code_data.train_test_split(test_size=0.05)
 
@@ -65,7 +65,7 @@ for data in d["train"]['text']:
 print('total unique words: ', len(words))
 print('total unique words - frequency > 1:', len([w for w in words if words[w] > 1]))
 print('total unique words - frequency > 2:', len([w for w in words if words[w] > 2]))
-sys.exit(0)
+# sys.exit(0)
 
 
 dataset_to_text(d["train"], train_txt)

@@ -34,6 +34,10 @@ source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split
 d = source_code_data.train_test_split(test_size=0.05)
 print(d["train"], d["test"])
 print('data loaded ...')
+
+print(len(d["train"][0]['text'].split()))
+print(len(d["train"][1]['text'].split()))
+
 # ========================= load data END =========================
 
 
@@ -45,16 +49,20 @@ max_length = 512 # 768
 tokenizer = transformers.AlbertTokenizer.from_pretrained("tokenizer.model")
 
 print(len(d["train"][0]['text'].split()))
+
 # print(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length=max_length))
 print(len(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length=max_length)['input_ids']))
+print(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length=max_length)['input_ids'])
 
 # 30,522 vocab is BERT's default vocab size, feel free to tweak
-vocab_size = 32000
+vocab_size = tokenizer.vocab_size + 10
 print('vocab_size: ', vocab_size)
+print('tokenizer.vocab_size: ', tokenizer.vocab_size)
 print('tokenizer loaded ...')
 
 print((d["train"][0]['text']))
 print(len((d["train"][0]['text']).split()))
+
 # ========================= load tokenizer END =========================
 
 
@@ -128,13 +136,13 @@ data_collator = DataCollatorForLanguageModeling(
 )
 print('start training...')
 
-batch_size_per_gpu = 5
-save_step = 5000
+batch_size_per_gpu = 8
+save_step = 100
 training_args = TrainingArguments(
     output_dir=model_path,          # output directory to where save model checkpoint
     evaluation_strategy="steps",    # evaluate each `logging_steps` steps
     overwrite_output_dir=True,      
-    num_train_epochs=50,            # number of training epochs, feel free to tweak
+    num_train_epochs=3,            # number of training epochs, feel free to tweak
     per_device_train_batch_size=batch_size_per_gpu, # the training batch size, put it as high as your GPU memory fits
     gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
     per_device_eval_batch_size=batch_size_per_gpu,  # evaluation batch size
@@ -143,6 +151,7 @@ training_args = TrainingArguments(
     load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training
     save_total_limit=5,           # whether you don't have much space so you let only 3 model weights saved in the disk
 )
+
 # initialize the trainer and pass everything to it
 trainer = Trainer(
     model=model,
