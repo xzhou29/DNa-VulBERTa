@@ -6,7 +6,7 @@ import argparse
 import warnings
 from joblib import Parallel, delayed
 import json
-import de_naturalize
+import naturalize
 warnings.filterwarnings('ignore')  # "error", "ignore", "always", "default", "module" or "once"
 
 
@@ -19,12 +19,12 @@ def main():
                         default="..\\cbert\\DNa_data\\poj.pkl")
     parser.add_argument('--workers', required=False, help='number of workers',
                         default=1, type=int)
-    parser.add_argument('--iter', required=False, help='number of denaturalize_iter',
+    parser.add_argument('--iter', required=False, help='number of naturalize_iter',
                         default=1, type=int)
     args = parser.parse_args()
 
     output_filename = args.output
-    denaturalize_iter = args.iter
+    naturalize_iter = args.iter
     # load pre-processed data
     data_type = 'train'
     input_file = args.input
@@ -39,11 +39,11 @@ def main():
     parser_path = os.path.join(base_dir, "parser", "languages.so")
     columns=['index', 'filename', 'code', 'types', 'label']
 
-    # def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_iter, parser_path):
+    # def data_extractor(index, uniqe_id, label, original_code, columns, naturalize_iter, parser_path):
     new_data_collections = Parallel(n_jobs=args.workers)\
-            (delayed(de_naturalize.data_extractor)(i, 'poj_' + str(data[i]['index']),
+            (delayed(naturalize.data_extractor)(i, 'poj_' + str(data[i]['index']),
                                      data[i]['label'], data[i]['code'],
-                                     columns, denaturalize_iter, parser_path)
+                                     columns, naturalize_iter, parser_path)
              for i in tqdm( range(len(data))))
 
     all_new_data_collections = []

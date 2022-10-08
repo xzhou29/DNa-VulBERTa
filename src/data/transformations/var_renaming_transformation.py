@@ -56,7 +56,8 @@ class VarRenamer(TransformationBase):
         self.processor = processor_function[self.language]
         self.tokenizer_function = tokenizer_function[self.language]
         self.random_shuffle = False
-        self.rename_by_usage = True
+        self.rename_by_usage = False
+        self.tagging = False
         self.taggers = self.get_taggers('support_files/taggers.txt')
         # C/CPP: function_declarator
         # Java: class_declaration, method_declaration
@@ -202,21 +203,26 @@ class VarRenamer(TransformationBase):
             func_map[v] = v
         modified_code = []
         for t in original_code:
-            if t in var_to_type:
-                modified_code.append(var_to_type[t])
-            if t in var_names:
-                modified_code.append(var_map[t])
-            elif t in func_names:
-                modified_code.append(func_map[t])
+            if self.tagging:
+                if t in var_to_type:
+                    modified_code.append(var_to_type[t])
+            if self.rename_by_usage:
+                if t in var_names:
+                    modified_code.append(var_map[t])
+                elif t in func_names:
+                    modified_code.append(func_map[t])
+                else:
+                    modified_code.append(t)
             else:
                 modified_code.append(t)
 
         modified_code_string = " ".join(modified_code)
-
         if modified_code != original_code:
-            modified_root = self.parse_code(modified_code_string)
-            modified_code_string =   modified_code_string  + ' @SPLIT_MARK@ ' + ' '.join(types)
-            return modified_root, modified_code_string, True
+            #modified_root = self.parse_code(modified_code_string)
+            modified_code_string =  modified_code_string  + ' @SPLIT_MARK@ ' + ' '.join(types)
+            return root_node, modified_code_string, True
+        elif not self.tagging and not self.rename_by_usage:
+            return root_node, modified_code_string, True
         else:
             return root_node, code_string, False
 
@@ -361,9 +367,8 @@ class VarRenamer(TransformationBase):
     def transform_code(
             self,
             code: Union[str, bytes],
-            random: bool
     ) -> Tuple[str, object]:
-        self.random_shuffle = random
+        # self.random_shuffle = random
         root, code, success = self.var_renaming(code)
         code = re.sub("[ \n\t]+", " ", code)
         return code, {

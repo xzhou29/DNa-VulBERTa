@@ -37,7 +37,9 @@ class SemanticPreservingTransformation:
     def transform_code(
             self,
             code: str,
-            random=False
+            random=False,
+            renaming=False, 
+            tagging=False,
     ):
         transformed_code, transformation_name = None, None
         indices = list(range(len(self.transformations)))
@@ -57,6 +59,9 @@ class SemanticPreservingTransformation:
         #     return code, None
         for si in indices:
             t = self.transformations[si]
-            code, metadata = t.transform_code(code, random)
+            t.rename_by_usage = renaming
+            t.tagging = tagging
+            t.random_shuffle = random
+            code, metadata = t.transform_code(code)
 
         return code, metadata
