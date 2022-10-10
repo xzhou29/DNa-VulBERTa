@@ -9,7 +9,7 @@ from tokenizers.processors import BertProcessing
 # download and prepare cc_news dataset
 
 # ================== mannual setup START===================
-base_dir = '..\\cbert\\test_data\\'
+base_dir = '..\\cbert\\test_data\\devign\\'
 tokenizer_folder = 'WordPiece_tokenizer'
 # ================== mannual setup END ===================
 # code or types
@@ -23,7 +23,7 @@ d = source_code_data.train_test_split(test_size=0.05)
 
 vocab_size = 32000
 print('vocab_size: ', vocab_size)
-min_frequency = 3
+min_frequency = 2
 # max_length = 512
 
 # ================== loading raw data START===================
@@ -54,7 +54,6 @@ special_tokens = ["[PAD]", "[UNK]", "[CLS]", "[MASK]", "<s>", "</s>"]
 # Customize training
 tokenizer.train(files=files, vocab_size=vocab_size, min_frequency=min_frequency,
                 show_progress=True,
-                # model_type='bert',
                 special_tokens=special_tokens)
 
 
@@ -69,6 +68,8 @@ with open(os.path.join(tokenizer_folder, "config.json"), "w") as f:
         "mask_token": "[MASK]",
         "BOS_token": "<s>", # begining of sentence
         "EOS": "</s>",  # end of sentence
+        'model_type': 'bert',
+
     }
     json.dump(tokenizer_cfg, f)
 

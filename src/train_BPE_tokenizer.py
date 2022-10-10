@@ -53,7 +53,6 @@ tokenizer = ByteLevelBPETokenizer(lowercase=False)
 # Customize training
 tokenizer.train(files=files, vocab_size=vocab_size, min_frequency=min_frequency,
                 show_progress=True,
-                # model_type='bert',
                 special_tokens=[
                                 "[S]",
                                 "[/S]",
@@ -75,6 +74,7 @@ with open(os.path.join(tokenizer_folder, "config.json"), "w") as f:
         "BOS_token": "[S]", # begining of sentence
         "EOS": "[/S]",  # end of sentence
         # "model_max_length": max_length,
+        'model_type': 'robert',
         "max_len": max_length,
         "vocab_size": vocab_size,
     }

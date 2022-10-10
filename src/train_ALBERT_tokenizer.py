@@ -80,10 +80,28 @@ files = [train_txt]
 # from tokenizers import SentencePieceBPETokenizer
 import sentencepiece as spm
 # SentencePiece needs lots of RAM. OOM error is possible. so we set input_sentence_size=500000
+
+
+with open(os.path.join(tokenizer_folder, "config.json"), "w") as f:
+    tokenizer_cfg = {
+        "do_lower_case": False,
+        "unk_token": "[UNK]",
+        "pad_token": "[PAD]",
+        "cls_token": "[CLS]",
+        "mask_token": "[MASK]",
+        "BOS_token": "<s>", # begining of sentence
+        "EOS": "</s>",  # end of sentence
+        'model_type': 'albert',
+    }
+    json.dump(tokenizer_cfg, f)
+
+
+
 spm.SentencePieceTrainer.train(input=files, model_prefix="tokenizer", vocab_size=32000,
                                 shuffle_input_sentence=True,
                                 input_sentence_size=500000,
                                 train_extremely_large_corpus=False,
+                                model_type='albert',
                                 )
 # https://discuss.huggingface.co/t/training-albert-from-scratch-with-distributed-training/1260
 # ================== SentencePieceBPETokenizer END===================

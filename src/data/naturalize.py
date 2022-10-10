@@ -11,7 +11,7 @@ input: a string  & mode (language)
 output: a string
 '''
 def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_iter, parser_path,
-                        renaming=True, tagging=False, random = False):
+                        renaming=True, tagging=True, random = False):
     new_rows = []
     # print(func)
     code = original_code
@@ -421,11 +421,9 @@ if __name__ == '__main__':
     parser_path = os.path.join(base_dir, "parser", "languages.so")
     columns=['index', 'filename', 'code', 'types', 'label']
 
-    rows = data_extractor(0, 0, 0, source_code, columns, 1, parser_path,  renaming=True, tagging=True)
+    rows = data_extractor(0, 0, 0, source_code, columns, 1, parser_path)
     print(rows[0]['code'])
-
     sys.exit(0)
-
     # code, _ = remove_comments(code)
     # code = pre_process(code)
     tokenized_code, success = language_transformers.transform_code(code, random=False)

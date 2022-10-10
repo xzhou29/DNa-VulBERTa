@@ -29,7 +29,7 @@ except OSError as e:
 # ========================= load data START =========================
 # code or types
 # BPE tokenizer will have longer set of tokens
-source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=256)
+source_code_data = load_data.load_DNa_data(base_dir, mode='code') # , truncate_split=True, max_len=256
 # split the dataset into training (90%) and testing (10%)
 d = source_code_data.train_test_split(test_size=0.05)
 print(d["train"], d["test"])
@@ -62,7 +62,6 @@ print('tokenizer loaded ...')
 
 print((d["train"][0]['text']))
 print(len((d["train"][0]['text']).split()))
-
 # ========================= load tokenizer END =========================
 
 
@@ -70,7 +69,7 @@ print(len((d["train"][0]['text']).split()))
 truncate_longer_samples = True
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
-    return tokenizer(examples["text"], truncation=True, padding=True, max_length=max_length)
+    return tokenizer(examples["text"], truncation=True, padding='max_length', max_length=max_length)
 
 def encode_without_truncation(examples):
     """Mapping function to tokenize the sentences passed without truncation"""
@@ -137,7 +136,7 @@ data_collator = DataCollatorForLanguageModeling(
 print('start training...')
 
 batch_size_per_gpu = 8
-save_step = 100
+save_step = 5000
 training_args = TrainingArguments(
     output_dir=model_path,          # output directory to where save model checkpoint
     evaluation_strategy="steps",    # evaluate each `logging_steps` steps
@@ -165,3 +164,7 @@ trainer = Trainer(
 
 # train the model
 trainer.train()
+
+PATH = os.path.join(model_path, 'best')
+
+trainer.save_model(PATH)

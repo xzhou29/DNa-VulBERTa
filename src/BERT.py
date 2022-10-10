@@ -12,7 +12,7 @@ from tokenizers.processors import BertProcessing
 # download and prepare cc_news dataset
 
 # ========================= directories =========================
-base_dir = '..\\cbert\\test_data'
+base_dir = '..\\cbert\\test_data\\devign'
 # base_dir = '..\\cbert\\DNa_data'
 model_path = "pretrained-dna-bert"
 tokenizer_path = "WordPiece_tokenizer"
@@ -25,7 +25,7 @@ except OSError as e:
 # ========================= load data START =========================
 # code or types
 # BPE tokenizer will have longer set of tokens
-source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=256)
+source_code_data = load_data.load_DNa_data(base_dir, mode='code')
 # split the dataset into training (90%) and testing (10%)
 d = source_code_data.train_test_split(test_size=0.05)
 print(d["train"], d["test"])
@@ -44,11 +44,16 @@ tokenizer = BertTokenizerFast.from_pretrained(tokenizer_path)
 
 # 30,522 vocab is BERT's default vocab size, feel free to tweak
 vocab_size = tokenizer.vocab_size + 10
-print('vocab_size: ', tokenizer.vocab_size)
+print('tokenizer.vocab_size: ', tokenizer.vocab_size)
+print('vocab_size: ', vocab_size)
 print('tokenizer loaded ...')
 
 print((d["train"][0]['text']))
 print(len((d["train"][0]['text']).split()))
+
+# print(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length=max_length))
+print(len(tokenizer(d["train"][0]['text'], truncation=True, max_length=max_length)['input_ids']))
+# print(tokenizer(d["train"][0]['text'], truncation=True, padding=True, max_length=max_length)['input_ids'])
 # sys.exit(0)
 # ========================= load tokenizer END =========================
 
@@ -57,7 +62,7 @@ print(len((d["train"][0]['text']).split()))
 truncate_longer_samples = True
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
-    return tokenizer(examples["text"], truncation=True, padding=True, max_length=max_length)
+    return tokenizer(examples["text"], truncation=True,  max_length=max_length)
 
 def encode_without_truncation(examples):
     """Mapping function to tokenize the sentences passed without truncation"""
@@ -103,20 +108,25 @@ from transformers import DataCollatorForLanguageModeling
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer, mlm=True, mlm_probability=0.2
 )
-batch_size_per_gpu = 1
+
+
+print('start training...')
+save_step = 500
+batch_size_per_gpu = 12
 training_args = TrainingArguments(
     output_dir=model_path,          # output directory to where save model checkpoint
     evaluation_strategy="steps",    # evaluate each `logging_steps` steps
     overwrite_output_dir=True,      
-    num_train_epochs=5,            # number of training epochs, feel free to tweak
+    num_train_epochs=50,            # number of training epochs, feel free to tweak
     per_device_train_batch_size=batch_size_per_gpu, # the training batch size, put it as high as your GPU memory fits
     gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
     per_device_eval_batch_size=batch_size_per_gpu,  # evaluation batch size
-    logging_steps=5000,             # evaluate, log and save model checkpoints every 1000 step
-    save_steps=5000,
+    logging_steps=save_step,             # evaluate, log and save model checkpoints every 1000 step
+    save_steps=save_step,
     load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training
     save_total_limit=5,           # whether you don't have much space so you let only 3 model weights saved in the disk
 )
+
 # initialize the trainer and pass everything to it
 trainer = Trainer(
     model=model,
@@ -131,3 +141,6 @@ trainer = Trainer(
 # ========================= Pre-training START =========================
 # train the model
 trainer.train()
+
+PATH = os.path.join(model_path, 'best')
+trainer.save_model(PATH)

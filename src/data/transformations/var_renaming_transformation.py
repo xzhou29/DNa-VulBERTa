@@ -191,6 +191,7 @@ class VarRenamer(TransformationBase):
                         new_var_name = '{}{}'.format(new_var_name, used_names[new_var_name])
                         used_names[old_name] += 1
                     else:
+                        # new_var_name = '{}_{}'.format(new_var_name, 0)
                         used_names[new_var_name] = 1
                     var_map[v] = new_var_name
         else:
@@ -290,7 +291,7 @@ class VarRenamer(TransformationBase):
                     if tokens[i-1] == '*':
                         return tokens[i-2] + 'Pointer'
                     elif tokens[i-1] == 'const':
-                        return v
+                        return tokens[i-1]
                     elif tokens[i-1] in potential_data_types:
                         return tokens[i-1] 
                     elif tokens[i-1] in ['int', 'string', 'char', 'bool']:
