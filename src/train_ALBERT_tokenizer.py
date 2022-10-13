@@ -10,7 +10,7 @@ from tokenizers.processors import BertProcessing
 # download and prepare cc_news dataset
 
 # ================== mannual setup START===================
-base_dir = '..\\cbert\\test_data\\'
+base_dir = '/scratch/dna_data/mvdsc'
 tokenizer_folder = 'ALBERT_tokenizer'
 # ================== mannual setup END ===================
 # code or types
@@ -19,7 +19,7 @@ if not os.path.isdir(tokenizer_folder):
     os.mkdir(tokenizer_folder)
 
 # ================== loading raw data START===================
-source_code_data = load_data.load_DNa_data(base_dir, mode='types')
+source_code_data = load_data.load_DNa_data(base_dir, mode='code')
 
 # print(source_code_data)
 # types = {}
@@ -36,7 +36,7 @@ source_code_data = load_data.load_DNa_data(base_dir, mode='types')
 
 d = source_code_data.train_test_split(test_size=0.05)
 
-vocab_size = 32000
+vocab_size = 200
 print('vocab_size: ', vocab_size)
 min_frequency = 3
 # max_length = 512
@@ -97,11 +97,10 @@ with open(os.path.join(tokenizer_folder, "config.json"), "w") as f:
 
 
 
-spm.SentencePieceTrainer.train(input=files, model_prefix="tokenizer", vocab_size=32000,
+spm.SentencePieceTrainer.train(input=files, model_prefix="tokenizer", vocab_size=vocab_size,
                                 shuffle_input_sentence=True,
                                 input_sentence_size=500000,
                                 train_extremely_large_corpus=False,
-                                model_type='albert',
                                 )
 # https://discuss.huggingface.co/t/training-albert-from-scratch-with-distributed-training/1260
 # ================== SentencePieceBPETokenizer END===================

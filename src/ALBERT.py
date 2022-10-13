@@ -29,7 +29,7 @@ except OSError as e:
 # ========================= load data START =========================
 # code or types
 # BPE tokenizer will have longer set of tokens
-source_code_data = load_data.load_DNa_data(base_dir, mode='code') # , truncate_split=True, max_len=256
+source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=256) # , truncate_split=True, max_len=256
 # split the dataset into training (90%) and testing (10%)
 d = source_code_data.train_test_split(test_size=0.05)
 print(d["train"], d["test"])
