@@ -18,8 +18,14 @@ tokenizer_folder = 'ALBERT_tokenizer'
 if not os.path.isdir(tokenizer_folder):
     os.mkdir(tokenizer_folder)
 
+
+vocab_size = 32000
+print('vocab_size: ', vocab_size)
+min_frequency = 3
+max_length = 4096
+
 # ================== loading raw data START===================
-source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=4096)
+source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=max_length)
 
 # print(source_code_data)
 # types = {}
@@ -36,10 +42,7 @@ source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split
 
 d = source_code_data.train_test_split(test_size=0.05)
 
-vocab_size = 200
-print('vocab_size: ', vocab_size)
-min_frequency = 3
-# max_length = 512
+
 
 # ================== loading raw data START===================
 def dataset_to_text(dataset, output_filename="data.txt"):

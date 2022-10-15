@@ -19,7 +19,7 @@ if not os.path.isdir(tokenizer_folder):
 
 vocab_size = 32000
 print('vocab_size: ', vocab_size)
-min_frequency = 5
+min_frequency = 3
 max_length = 4096
 
 # ================== loading raw data START===================

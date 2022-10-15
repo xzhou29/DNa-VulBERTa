@@ -17,14 +17,17 @@ tokenizer_folder = 'WordPiece_tokenizer'
 if not os.path.isdir(tokenizer_folder):
     os.mkdir(tokenizer_folder)
 
-# ================== loading raw data START===================
-source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=4096)
-d = source_code_data.train_test_split(test_size=0.05)
 
 vocab_size = 32000
 print('vocab_size: ', vocab_size)
-min_frequency = 2
-# max_length = 512
+min_frequency = 3
+max_length = 4096
+
+# ================== loading raw data START===================
+source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=max_length)
+d = source_code_data.train_test_split(test_size=0.05)
+
+
 
 # ================== loading raw data START===================
 def dataset_to_text(dataset, output_filename="data.txt"):
@@ -69,6 +72,7 @@ with open(os.path.join(tokenizer_folder, "config.json"), "w") as f:
         "BOS_token": "<s>", # begining of sentence
         "EOS": "</s>",  # end of sentence
         'model_type': 'bert',
+        "max_len": max_length,
 
     }
     json.dump(tokenizer_cfg, f)
