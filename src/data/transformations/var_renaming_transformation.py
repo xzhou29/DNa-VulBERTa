@@ -197,17 +197,28 @@ class VarRenamer(TransformationBase):
         else:
             for idx, v in enumerate(var_names):
                 if v not in var_map:
-                    var_map[v] = f"VAR_{idx}"
+                    var_map[v] = f"VAR{idx}"
         func_map = {}
         for idx, v in enumerate(func_names):
-            # func_map[v] = f"FUNC_{idx}"
-            func_map[v] = v
+            func_map[v] = f"FUNC{idx}"
+            #func_map[v] = v
         modified_code = []
-        for t in original_code:
+        for t in original_code:                
             if self.tagging:
                 if t in var_to_type:
-                    modified_code.append(var_to_type[t])
-            if self.rename_by_usage:
+                    tmp_type = var_to_type[t]
+                    tmp_type = tmp_type.split('_')
+                    tmp_type = [s[0].upper() for s in tmp_type]
+                    tmp_type = ''.join(tmp_type)
+                    modified_code.append(tmp_type)
+
+            if t.startswith('"'):
+                modified_code.append('DQ')
+                modified_code.append(str(len(t)-2))
+            elif t.startswith("'"):
+                modified_code.append('SQ')
+                modified_code.append(str(len(t)-2))
+            elif self.rename_by_usage:
                 if t in var_names:
                     modified_code.append(var_map[t])
                 elif t in func_names:
@@ -269,17 +280,17 @@ class VarRenamer(TransformationBase):
         if data_type == 'other' and not is_return and not is_param and not is_use:
             return v, potential_data_types
         if is_param:
-            new_var += 'Param'
+            new_var += 'PA'
         if is_define:
-            new_var += 'Def'
+            new_var += 'DE'
         if is_use:
-            new_var += 'Use'
+            new_var += 'US'
         if is_call:
-            new_var += 'Call'
+            new_var += 'CA'
         if is_pass:
-            new_var += 'Pass'
+            new_var += 'PA'
         if is_return:
-            new_var += 'Return'
+            new_var += 'RE'
         # if data_type == 'other':
         # print(v, new_var)
         return new_var, potential_data_types
@@ -289,13 +300,13 @@ class VarRenamer(TransformationBase):
             if v == token:
                 if i > 0:
                     if tokens[i-1] == '*':
-                        return tokens[i-2] + 'Pointer'
+                        return tokens[i-2] + 'PO'
                     elif tokens[i-1] == 'const':
-                        return tokens[i-1]
+                        return tokens[i-1][:2].upper()
                     elif tokens[i-1] in potential_data_types:
-                        return tokens[i-1] 
+                        return tokens[i-1][0].upper()
                     elif tokens[i-1] in ['int', 'string', 'char', 'bool']:
-                        return tokens[i-1]
+                        return tokens[i-1][0].upper()
         return 'other'
 
     def is_param(self, v, tokens):

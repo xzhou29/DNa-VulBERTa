@@ -31,12 +31,8 @@ def main():
     data_file = args.input
     f = open(data_file)
     data = json.load(f)
-
-    # print(data[:1])
     random.Random(2022).shuffle(data)
-    # print(data[:1])
-    # sys.exit(0)
-    # 0.8/0.1/0.1
+
     if not args.all:
         data = data[:int(len(data) * 0.8)]
 

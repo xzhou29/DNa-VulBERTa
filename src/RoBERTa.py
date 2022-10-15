@@ -18,10 +18,13 @@ from tokenizers.processors import BertProcessing
 # download and prepare cc_news dataset
 
 # ========================= directories =========================
-base_dir = '..\\cbert\\test_data'
+base_dir = '/scratch/dna_data_pretraining_2'
 # base_dir = '..\\cbert\\DNa_data'
 model_path = "pretrained-dna-roberta"
 tokenizer_path = "BPE_tokenizer"
+save_step = 1000
+batch_size_per_gpu = 2
+num_train_epochs = 50
 
 try:
     os.rmdir(model_path)
@@ -90,7 +93,7 @@ print('dataset encoded ...')
 # Set a configuration for our RoBERTa model
 config = RobertaConfig(
     vocab_size=vocab_size,
-    max_position_embeddings=max_length+2,
+    max_position_embeddings=max_length+5,
     num_attention_heads = 12,
     num_hidden_layers = 12,
     hidden_size = 768,
@@ -108,17 +111,17 @@ data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer, mlm=True, mlm_probability=0.15
 )
 
-batch_size_per_gpu = 1
+
 training_args = TrainingArguments(
     output_dir=model_path,          # output directory to where save model checkpoint
     evaluation_strategy="steps",    # evaluate each `logging_steps` steps
     overwrite_output_dir=True,      
-    num_train_epochs=5,            # number of training epochs, feel free to tweak
+    num_train_epochs=num_train_epochs,            # number of training epochs, feel free to tweak
     per_device_train_batch_size=batch_size_per_gpu, # the training batch size, put it as high as your GPU memory fits
     gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
     per_device_eval_batch_size=batch_size_per_gpu,  # evaluation batch size
-    logging_steps=5000,             # evaluate, log and save model checkpoints every 1000 step
-    save_steps=5000,
+    logging_steps=save_step,             # evaluate, log and save model checkpoints every 1000 step
+    save_steps=save_step,
     load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training
     save_total_limit=5,           # whether you don't have much space so you let only 3 model weights saved in the disk
 )

@@ -416,7 +416,7 @@ if __name__ == '__main__':
     }
     """
     
-    source_code = source_code_4
+    source_code = source_code_5
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))     
     parser_path = os.path.join(base_dir, "parser", "languages.so")
     columns=['index', 'filename', 'code', 'types', 'label']

@@ -19,7 +19,7 @@ if not os.path.isdir(tokenizer_folder):
     os.mkdir(tokenizer_folder)
 
 # ================== loading raw data START===================
-source_code_data = load_data.load_DNa_data(base_dir, mode='code')
+source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=4096)
 
 # print(source_code_data)
 # types = {}

@@ -33,10 +33,11 @@ def main():
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
     parser_path = os.path.join(base_dir, "parser", "languages.so")
     columns=['index', 'filename', 'code', 'types', 'label']
-
+    # print(data)
     # def data_extractor(index, uniqe_id, label, original_code, columns, naturalize_iter, parser_path):
+    # data['label'][i]
     new_data_collections = Parallel(n_jobs=args.workers)\
-            (delayed(naturalize.data_extractor)(i, 'd2a_function_{}'.format(data['id'][i]),
+            (delayed(naturalize.data_extractor)(i, '{}'.format(data['id'][i]),
                                      data['label'][i], data['code'][i],
                                      columns, naturalize_iter, parser_path)
              for i in tqdm( range(len(data))))
