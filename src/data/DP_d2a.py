@@ -32,7 +32,7 @@ def main():
             
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
     parser_path = os.path.join(base_dir, "parser", "languages.so")
-    columns=['index', 'filename', 'code', 'types', 'label']
+    columns=['index', 'filename', 'code', 'type', 'label']
     # print(data)
     # def data_extractor(index, uniqe_id, label, original_code, columns, naturalize_iter, parser_path):
     # data['label'][i]

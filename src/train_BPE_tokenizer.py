@@ -9,7 +9,7 @@ from tokenizers.processors import BertProcessing
 # download and prepare cc_news dataset
 
 # ================== mannual setup START===================
-base_dir = '/scratch/dna_data_pretraining_2'
+base_dir = '/scratch/dna_data_pretraining_2/'
 tokenizer_folder = 'BPE_tokenizer'
 # ================== mannual setup END ===================
 # code or types
@@ -20,7 +20,7 @@ if not os.path.isdir(tokenizer_folder):
 vocab_size = 32000
 print('vocab_size: ', vocab_size)
 min_frequency = 3
-max_length = 4096
+max_length = 1024
 
 # ================== loading raw data START===================
 source_code_data = load_data.load_DNa_data(base_dir, mode='code', truncate_split=True, max_len=max_length)
@@ -73,7 +73,7 @@ with open(os.path.join(tokenizer_folder, "config.json"), "w") as f:
         "BOS_token": "[S]", # begining of sentence
         "EOS": "[/S]",  # end of sentence
         # "model_max_length": max_length,
-        'model_type': 'robert',
+        'model_type': 'roberta',
         "max_len": max_length,
         "vocab_size": vocab_size,
     }

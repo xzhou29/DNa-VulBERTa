@@ -18,12 +18,15 @@ from tokenizers.processors import BertProcessing
 # download and prepare cc_news dataset
 
 # ========================= directories =========================
-base_dir = '/scratch/dna_data_pretraining_2'
+# dna_data_pretraining: original version with renaming but no tagging
+# dna_data_pretraining_lite: lite version with renaming and tagging
+# dna_data_pretraining_2: lite version with renaming 
+base_dir = '../dna_data_pretraining_2'
 # base_dir = '..\\cbert\\DNa_data'
-model_path = "pretrained-dna-roberta"
-tokenizer_path = "BPE_tokenizer"
-save_step = 1000
-batch_size_per_gpu = 2
+model_path = "pretrained-dna-roberta-2"
+tokenizer_path = "../dna_data_pretraining_2/BPE_tokenizer"
+save_step = 5000
+batch_size_per_gpu = 36
 num_train_epochs = 50
 
 try:

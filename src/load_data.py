@@ -11,19 +11,19 @@ def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512, igno
     # each instance is a dictionary as:  ['filename', 'code']
     # TODO test with only one file 
     # file_names = glob.glob(os.path.join('/scratch/xin/bert_source/top_60_cpp_topological/', 'data_10000.pkl'), recursive=False)
-    file_names = glob.glob(os.path.join(base_dir, '*.pkl'), recursive=True)
+    file_names = glob.glob(os.path.join(base_dir, '*/*.pkl'), recursive=True)
     loaded_data = {}
     df = {'filename': [], 'text': [], 'label': []}
     if ignore_label:
         df = {'filename': [], 'text': []}
     for filename in tqdm(file_names):
-        # if 'sysevr_api_fc_train' not in filename:
+        # if 'devign' not in filename:
             # continue
         print('loading: ', filename)
         with open(filename, 'rb') as f:
             mydict = pickle.load(f)
             print('number of rows:', len(mydict['filename']))
-            for i in range(len(mydict['filename'][:1000])):
+            for i in range(len(mydict['filename'])):
                 text = mydict[mode][i]
                 text = preprocess(text)
                 if truncate_split:

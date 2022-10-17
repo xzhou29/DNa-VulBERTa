@@ -64,19 +64,19 @@ class VarRenamer(TransformationBase):
         # python: function_definition, call
         # js: function_declaration
         self.whitelist = self.get_whitelist()
-
         # print(len(self.whitelist))
         self.not_var_ptype = ["function_declarator", "class_declaration", "method_declaration", "function_definition",
                               "function_declaration", "call", "local_function_statement"]
     def get_taggers(self, filename):
-        ignored = {}
+        taggers = {}
         with open(filename, 'r') as f:
             s = f.readlines()
             for token in s:
                 split_tokens = token.split()
                 if split_tokens[1] != 'na':
-                    ignored[split_tokens[0]] = split_tokens[1]
-        return  ignored
+                    taggers[split_tokens[0]] = split_tokens[1]
+        return  taggers
+
 
     def get_whitelist(self):
         whitelist = []
@@ -137,7 +137,7 @@ class VarRenamer(TransformationBase):
             if var_name not in var_to_type:
                 this_type = current_node.type
                 if len(this_type) > 2 and this_type in self.taggers:
-                    var_to_type[var_name] = this_type
+                    var_to_type[var_name] = self.taggers[this_type]
             if current_node.type in identifier_types and str(current_node.parent.type) not in self.not_var_ptype:
                 # whitelist is a set of collected strings: c programming syntax, function call, etc.
                 if var_name.lower() not in self.whitelist and var_name not in var_names:
@@ -200,21 +200,24 @@ class VarRenamer(TransformationBase):
                     var_map[v] = f"VAR{idx}"
         func_map = {}
         for idx, v in enumerate(func_names):
-            func_map[v] = f"FUNC{idx}"
+            func_map[v] = f"Function{idx}"
             #func_map[v] = v
         modified_code = []
         for t in original_code:                
             if self.tagging:
                 if t in var_to_type:
                     tmp_type = var_to_type[t]
-                    tmp_type = tmp_type.split('_')
-                    tmp_type = [s[0].upper() for s in tmp_type]
-                    tmp_type = ''.join(tmp_type)
+                    #tmp_type = tmp_type.split('_')
+                    #tmp_type = [s[:2].upper() for s in tmp_type]
+                    #tmp_type = ''.join(tmp_type)
                     modified_code.append(tmp_type)
 
             if t.startswith('"'):
                 modified_code.append('DQ')
                 modified_code.append(str(len(t)-2))
+                for st in ["%d", "%f", "%e", "%g"]:
+                    if st in t:
+                        modified_code.append(st)
             elif t.startswith("'"):
                 modified_code.append('SQ')
                 modified_code.append(str(len(t)-2))
@@ -280,17 +283,17 @@ class VarRenamer(TransformationBase):
         if data_type == 'other' and not is_return and not is_param and not is_use:
             return v, potential_data_types
         if is_param:
-            new_var += 'PA'
+            new_var += 'Par'
         if is_define:
-            new_var += 'DE'
+            new_var += 'Def'
         if is_use:
-            new_var += 'US'
+            new_var += 'Use'
         if is_call:
-            new_var += 'CA'
+            new_var += 'Cal'
         if is_pass:
-            new_var += 'PA'
+            new_var += 'Pas'
         if is_return:
-            new_var += 'RE'
+            new_var += 'Ret'
         # if data_type == 'other':
         # print(v, new_var)
         return new_var, potential_data_types
@@ -300,13 +303,13 @@ class VarRenamer(TransformationBase):
             if v == token:
                 if i > 0:
                     if tokens[i-1] == '*':
-                        return tokens[i-2] + 'PO'
+                        return tokens[i-2] + 'Po'
                     elif tokens[i-1] == 'const':
-                        return tokens[i-1][:2].upper()
+                        return tokens[i-1][:2]
                     elif tokens[i-1] in potential_data_types:
-                        return tokens[i-1][0].upper()
+                        return tokens[i-1]
                     elif tokens[i-1] in ['int', 'string', 'char', 'bool']:
-                        return tokens[i-1][0].upper()
+                        return tokens[i-1]
         return 'other'
 
     def is_param(self, v, tokens):

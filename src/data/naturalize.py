@@ -30,7 +30,7 @@ def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_
                 new_row[column] = str(uniqe_id) + '_{}_{}'.format(index, j)
             elif column == 'code':
                 new_row[column] = code
-            elif column == 'types':
+            elif column == 'type':
                 new_row[column] = types
             elif column == 'label':
                 new_row[column] = label
@@ -416,13 +416,14 @@ if __name__ == '__main__':
     }
     """
     
-    source_code = source_code_5
+    source_code = source_code_4
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))     
     parser_path = os.path.join(base_dir, "parser", "languages.so")
-    columns=['index', 'filename', 'code', 'types', 'label']
+    columns=['index', 'filename', 'code', 'type', 'label']
 
     rows = data_extractor(0, 0, 0, source_code, columns, 1, parser_path)
     print(rows[0]['code'])
+    # print(rows[0]['type'])
     sys.exit(0)
     # code, _ = remove_comments(code)
     # code = pre_process(code)
