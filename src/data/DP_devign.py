@@ -38,15 +38,16 @@ def main():
 
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
     parser_path = os.path.join(base_dir, "parser", "languages.so")
-    columns=['index', 'filename', 'code', 'type', 'label']
+    columns=['index', 'filename', 'code',  'code-2', 'type', 'label']
 
     # def data_extractor(index, uniqe_id, label, original_code, columns, naturalize_iter, parser_path):
     new_data_collections = Parallel(n_jobs=args.workers)\
             (delayed(naturalize.data_extractor)(i, data[i]['commit_id'],
                                      data[i]['target'], data[i]['func'],
                                      columns, naturalize_iter, parser_path)
-             for i in tqdm( range(len(data))))
+             for i in tqdm( range(len(data[:100]))))
 
+    
     all_new_data_collections = []
     index = 0
     for rows in new_data_collections:

@@ -2,6 +2,7 @@ import copy
 import os
 import sys
 import string
+import re 
 from transformations import (
     BlockSwap, ConfusionRemover, DeadCodeInserter, ForWhileTransformer,
     OperandSwap, NoTransformation, SemanticPreservingTransformation, SyntacticNoisingTransformation, VarRenamer
@@ -19,6 +20,7 @@ def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_
         if j > 0:
             random = True
         code, types, processed_code = naturalize_code(original_code, parser_path, random=random, renaming=renaming, tagging=tagging)
+        normal_code = normal_tokenize(original_code)
         # print(code)
         # sys.exit(0)
         code_to_save = processed_code # + ' @@ ' + types
@@ -30,6 +32,8 @@ def data_extractor(index, uniqe_id, label, original_code, columns, denaturalize_
                 new_row[column] = str(uniqe_id) + '_{}_{}'.format(index, j)
             elif column == 'code':
                 new_row[column] = code
+            elif column == 'code-2':
+                new_row[column] = normal_code
             elif column == 'type':
                 new_row[column] = types
             elif column == 'label':
@@ -77,6 +81,31 @@ def naturalize_code(code, parser_path, random, renaming, tagging, mode='c'):
     code = post_process(code, raw_code)
     return code, types, original_code
 
+
+def normal_tokenize(original_code):
+    lines = original_code.split('\n')
+    stop_chars = {',': 'comma', ':': 'colon', '.': 'dot', '"': 'doublequotation', "'": 'singlequotation', '/': 'backslash', '\\': 'slash',
+                  ';': 'semi', '[': '$leftbracket', ']': 'rightbracket', '{': 'rightcurly', '}': 'leftcurly', '+': 'plus', '-': 'minus',
+                  '*': 'times', '=': 'equal',  '(': 'leftpar', ')': 'rightpar', '&': 'and', '%': 'percent', '$': 'dollar', '#': 'num',
+                  '!': '', '`': 'backtick', '|': 'pipe', '<': 'less', '>': 'greater', '?': 'questionmark', '@': 'at', '_': 'underline'}
+    all_tokens = []
+    for line in lines:
+        tmp_tokens = line.split()
+        for t in tmp_tokens:
+            tmp_token = ''
+            for c in t:
+                if c in stop_chars:
+                    all_tokens.append(tmp_token)
+                    all_tokens.append(stop_chars[c])
+                    tmp_token = ''
+                else:
+                    tmp_token += c
+            if tmp_token:
+                all_tokens.append(tmp_token)
+                tmp_token = ''
+        all_tokens.append('new_line')
+    return ' '.join(all_tokens)
+    # print(all_tokens)
 
 # remove comments from raw source code
 def remove_comments(code_str):
@@ -416,30 +445,32 @@ if __name__ == '__main__':
     }
     """
     
-    source_code = source_code_4
+    source_code = source_code_2
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))     
     parser_path = os.path.join(base_dir, "parser", "languages.so")
-    columns=['index', 'filename', 'code', 'type', 'label']
+    columns=['index', 'filename', 'code', 'code-2', 'type', 'label']
 
     rows = data_extractor(0, 0, 0, source_code, columns, 1, parser_path)
     print(rows[0]['code'])
-    # print(rows[0]['type'])
-    sys.exit(0)
-    # code, _ = remove_comments(code)
-    # code = pre_process(code)
-    tokenized_code, success = language_transformers.transform_code(code, random=False)
-    if ' @SPLIT_MARK@ ' in tokenized_code:
-        tokenized_code_list = tokenized_code.split(' @SPLIT_MARK@ ')
-        code = tokenized_code_list[0]
-        types = tokenized_code_list[1]
-    else:
-        code = tokenized_code
-        types = []
-    # processed_code = post_process(code, source_code)
-    code = post_process(code, source_code)
 
-    print(code)
-    # print(code.split())
-    print(len(code.split()))
-    # print(types)
-    # print(types)
+    print(rows[0]['code-2'])
+
+    # print(rows[0]['type'])
+    # # code, _ = remove_comments(code)
+    # # code = pre_process(code)
+    # tokenized_code, success = language_transformers.transform_code(code, random=False)
+    # if ' @SPLIT_MARK@ ' in tokenized_code:
+    #     tokenized_code_list = tokenized_code.split(' @SPLIT_MARK@ ')
+    #     code = tokenized_code_list[0]
+    #     types = tokenized_code_list[1]
+    # else:
+    #     code = tokenized_code
+    #     types = []
+    # # processed_code = post_process(code, source_code)
+    # code = post_process(code, source_code)
+
+    # print(code)
+    # # print(code.split())
+    # print(len(code.split()))
+    # # print(types)
+    # # print(types)
