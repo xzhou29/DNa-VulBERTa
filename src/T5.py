@@ -30,6 +30,7 @@ sample_1 = "translate English to German: The house is wonderful."
 max_length = 512
 input_ids = tokenizer([sample, sample_1], return_tensors="pt", truncation=True, padding="max_length", max_length=max_length, ).input_ids  # Batch size 1
 
+print(input_ids)
 outputs = model(input_ids=input_ids)
 last_hidden_states = outputs.last_hidden_state
 

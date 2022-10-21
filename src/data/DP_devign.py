@@ -45,9 +45,8 @@ def main():
             (delayed(naturalize.data_extractor)(i, data[i]['commit_id'],
                                      data[i]['target'], data[i]['func'],
                                      columns, naturalize_iter, parser_path)
-             for i in tqdm( range(len(data[:100]))))
+             for i in tqdm( range(len(data))))
 
-    
     all_new_data_collections = []
     index = 0
     for rows in new_data_collections:
