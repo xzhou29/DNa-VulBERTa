@@ -7,11 +7,43 @@ import os
 import pickle 
 from tqdm import tqdm
 
-def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512, ignore_label=True):
+
+#  5 modes
+def load_vult_pretrain_data(base_dir, truncate_split=False, max_len=512):
+    file_names = glob.glob(os.path.join(base_dir, '*.pkl'), recursive=True)
+    # columns=['index', 'filename', 'code',  'nat', 'tags', 'label']
+    loaded_data = {}
+    df = {'filename': [], 'text': [], 'label': []}
+    for filename in tqdm(file_names):
+        if '_train' not in filename and '_valid' not in filename:
+            continue
+        print('loading: ', filename)
+        with open(filename, 'rb') as f:
+            mydict = pickle.load(f)
+            print('number of rows:', len(mydict['filename']))
+            for i in range(len(mydict['filename'][:1000])):
+                tmp_data = {}
+                code = mydict['code'][i]
+                tmp_data['code'] = preprocess(code)
+                tmp_data['nat']  = mydict['nat'][i]
+                tmp_data['tags']  = mydict['tags'][i]
+                label = mydict['label'][i]
+                for mode in ['code', 'nat', 'tags']:
+                    df['filename'].append(mydict['filename'][i])
+                    df['text'].append(tmp_data[mode])
+                    df['label'].append(str(label))
+        print('done...')
+    df = pd.DataFrame(df)
+    ### convert to Huggingface dataset
+    hg_dataset = Dataset(pa.Table.from_pandas(df))
+    return hg_dataset
+
+
+def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512, ignore_label=False, pretrain=False):
     # each instance is a dictionary as:  ['filename', 'code']
     # TODO test with only one file 
     # file_names = glob.glob(os.path.join('/scratch/xin/bert_source/top_60_cpp_topological/', 'data_10000.pkl'), recursive=False)
-    file_names = glob.glob(os.path.join(base_dir, '*/*.pkl'), recursive=True)
+    file_names = glob.glob(os.path.join(base_dir, '*.pkl'), recursive=True)
     loaded_data = {}
     df = {'filename': [], 'text': [], 'label': []}
     if ignore_label:
@@ -23,7 +55,7 @@ def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512, igno
         with open(filename, 'rb') as f:
             mydict = pickle.load(f)
             print('number of rows:', len(mydict['filename']))
-            for i in range(len(mydict['filename'])):
+            for i in range(len(mydict['filename'][:100])):
                 text = mydict[mode][i]
                 text = preprocess(text)
                 if truncate_split:
@@ -32,12 +64,18 @@ def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512, igno
                         df['filename'].append(mydict['filename'][i]+str(index))
                         df['text'].append(t)
                         if not ignore_label:
-                            df['label'].append(mydict['label'][i])
+                            if pretrain:
+                                df['label'].append( str(mydict['label'][i]) )
+                            else:
+                                df['label'].append( mydict['label'][i] )
                 else:
                     df['filename'].append(mydict['filename'][i])
                     df['text'].append(text)
                     if not ignore_label:
-                        df['label'].append(mydict['label'][i])
+                        if pretrain:
+                            df['label'].append( str(mydict['label'][i]) )
+                        else:
+                            df['label'].append( mydict['label'][i] )
                 # print()
         print('done...')
 
@@ -46,16 +84,11 @@ def load_DNa_data(base_dir, mode='code', truncate_split=False, max_len=512, igno
     hg_dataset = Dataset(pa.Table.from_pandas(df))
     return hg_dataset
 
+
 def preprocess(text):
     if not text:
         return 'None'
-    for s in ['(', ')', ':']:
-        text = text.split(s)
-        replace = ' {} '.format(s)
-        text = replace.join(text)
-    text = ' '.join(text.split())
     return text
-
 
 def process_truncate_split(text, max_length):
     text_s = text.split()

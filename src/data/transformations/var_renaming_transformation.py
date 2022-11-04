@@ -154,17 +154,6 @@ class VarRenamer(TransformationBase):
     def var_renaming(self, code_string):
         root_node = self.parse_code(code_string)
         types = [root_node.sexp()]
-        # print(root_node.sexp())
-        # print(root_node.type)
-        # print(root_node.start_point)
-        # print(root_node.end_point)
-        # function_node = root_node.children[0]
-        # print(function_node.type)
-        # print(function_node.child_by_field_name('name').type)
-        # function_name_node = function_node.children[1]
-        # print(function_name_node.type)
-        # print(function_name_node.start_point)
-        # print(function_name_node.end_point)
         original_code = self.tokenizer_function(code_string, root_node)
         # print('-- original_code: ', " ".join(original_code))
         var_names, func_names, var_to_type = self.extract_var_names(root_node, code_string)
@@ -203,15 +192,16 @@ class VarRenamer(TransformationBase):
             func_map[v] = f"Function{idx}"
             #func_map[v] = v
         modified_code = []
+        tags = []
         for t in original_code:                
             if self.tagging:
                 if t in var_to_type:
                     tmp_type = var_to_type[t]
+                    tags.append(tmp_type)
                     #tmp_type = tmp_type.split('_')
                     #tmp_type = [s[:2].upper() for s in tmp_type]
                     #tmp_type = ''.join(tmp_type)
-                    modified_code.append(tmp_type)
-
+                    # modified_code.append(tmp_type)
             if t.startswith('"'):
                 modified_code.append('DQ')
                 modified_code.append(str(len(t)-2))
@@ -232,9 +222,10 @@ class VarRenamer(TransformationBase):
                 modified_code.append(t)
 
         modified_code_string = " ".join(modified_code)
+        tags = " ".join(tags)
         if modified_code != original_code:
             #modified_root = self.parse_code(modified_code_string)
-            modified_code_string =  modified_code_string  + ' @SPLIT_MARK@ ' + ' '.join(types)
+            modified_code_string =  modified_code_string  + ' @SPLIT_MARK@ ' + tags
             return root_node, modified_code_string, True
         elif not self.tagging and not self.rename_by_usage:
             return root_node, modified_code_string, True

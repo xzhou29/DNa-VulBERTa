@@ -66,7 +66,7 @@ print(len((d["train"][0]['text']).split()))
 truncate_longer_samples = True
 def encode_with_truncation(examples):
     """Mapping function to tokenize the sentences passed with truncation"""
-    return tokenizer(examples["text"], truncation=True, padding=True, max_length=max_length)
+    return tokenizer(examples["text"], truncation=True, padding='max_length', max_length=max_length)
 
 def encode_without_truncation(examples):
     """Mapping function to tokenize the sentences passed without truncation"""

@@ -93,7 +93,7 @@ model_config = BertConfig(  vocab_size=vocab_size,
                             max_position_embeddings=max_length,
                             num_attention_heads = 12,
                             num_hidden_layers = 12,
-                            hidden_size = 768,
+                            hidden_size = 192, # 768
                             intermediate_size = 3072,
                             hidden_act = 'gelu',
                             hidden_dropout_prob = 0.1
@@ -108,7 +108,6 @@ from transformers import DataCollatorForLanguageModeling
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer, mlm=True, mlm_probability=0.2
 )
-
 
 print('start training...')
 save_step = 500
