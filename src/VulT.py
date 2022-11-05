@@ -22,11 +22,18 @@ import transformers
 # 4) code - taggers
 # 5) naturalized code - taggers
 ###################################################
+#### data
+## vulnerability detection in C/C++: D2A, Devign, MVDSC, SySeVR
+## 
+
+save_step = 20
+batch_size_per_device = 1
+num_train_epochs = 3
 
 # ========================= directories =========================
 base_dir = '/scratch/dna_data_vult/'
 # base_dir = '../dna_data_vult/'
-model_path = "pretrained-dna-vult"
+model_path = "./pretrained-dna-vult"
 
 # base_dir = '..\\cbert\\DNa_data'
 tokenizer_path = "Salesforce/codet5-base"
@@ -35,15 +42,15 @@ intial_model_path = 'Salesforce/codet5-base'
 # tokenizer_path = "t5-base"
 # intial_model_path = "t5-base"
 
-try:
-    os.rmdir(model_path)
-except OSError as e:
-    print("Error: %s : %s" % (model_path, e.strerror))
+# try:
+#     os.rmdir(model_path)
+# except OSError as e:
+#     print("Error: %s : %s" % (model_path, e.strerror))
 
 # ========================= load data START =========================
 # code or types
 # BPE tokenizer will have longer set of tokens
-source_code_data = load_data.load_vult_pretrain_data(base_dir, truncate_split=True, max_len=512)
+source_code_data = load_data.load_vult_pretrain_data(base_dir)
 
 # split the dataset into training (90%) and testing (10%)
 d = source_code_data.train_test_split(test_size=0.1, seed=42)
@@ -56,6 +63,7 @@ print('data loaded ...')
 # ================== loading raw data START===================
 # maximum sequence length, lowering will result to faster training (when increasing batch size)
 max_length = 512 # 768
+target_max_len = 512
 # tokenizer = RobertaTokenizerFast.from_pretrained(tokenizer_path, max_len=max_length)
 # when the tokenizer is trained and configured, load it as BertTokenizerFast
 # RobertaTokenizer
@@ -89,7 +97,7 @@ def preprocess_function(examples):
     model_inputs = tokenizer(examples["text"], max_length=max_length, padding=True, truncation=True)
     # Setup the tokenizer for targets
     with tokenizer.as_target_tokenizer():
-        labels = tokenizer(examples["label"], max_length=max_length, padding=False, truncation=True)
+        labels = tokenizer(examples["label"], max_length=target_max_len, padding=True, truncation=True)
     model_inputs["decoder_input_ids"] = labels["input_ids"]
     model_inputs["decoder_attention_mask"] = labels["attention_mask"]    
     # model_inputs["labels"] =  labels["input_ids"]
@@ -136,7 +144,7 @@ from transformers import (
 # so make sure the keys match the parameter names of the forward method
 @dataclass
 class VulTDataCollator():
-     def __call__(self, features: List[Dict[str, Any]], return_tensors=None) -> Dict[str, Any]:
+    def __call__(self, features: List[Dict[str, Any]], return_tensors=None) -> Dict[str, Any]:
         """
         Take a list of samples from a Dataset and collate them into a batch.
         Returns:
@@ -145,7 +153,7 @@ class VulTDataCollator():
         input_ids = torch.stack([example['input_ids'] for example in features])
         attention_mask = torch.stack([example['attention_mask'] for example in features])
         labels = torch.stack([example['decoder_input_ids'] for example in features])
-        labels[labels[:, :] == 0] = -100
+        #labels[labels[:, :] == 0] = -100
         decoder_attention_mask = torch.stack([example['decoder_attention_mask'] for example in features])
         return {
             'input_ids': input_ids, 
@@ -200,8 +208,8 @@ class DataTrainingArguments:
 # We now keep distinct sets of args, for a cleaner separation of concerns.
 parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
 
-save_step = 1000
-batch_size_per_device = 24
+
+
 args_dict = {
     "num_cores": 4,
     'training_script': 'vult.py',
@@ -210,31 +218,32 @@ args_dict = {
     'save_steps': save_step,
     'save_total_limit': 3,
     "model_name_or_path": 'vult',
-    "max_len": 512 ,
-    "target_max_len": 16,
+    "max_len": max_length ,
+    "target_max_len": target_max_len,
     "output_dir": model_path,
     "overwrite_output_dir": True,
     "per_device_train_batch_size": batch_size_per_device,
     "per_device_eval_batch_size": batch_size_per_device,
     "gradient_accumulation_steps": 8,  # accumulating the gradients before updating the weights
     "learning_rate": 3e-4,
-    "num_train_epochs": 50,
+    "num_train_epochs": num_train_epochs,
     "do_train": True
 }
 
 import json
 arg_file = os.path.join(model_path, 'args.json')
+
 with open(arg_file, 'w') as f:
-  json.dump(args_dict, f)
+    json.dump(args_dict, f)
 # we will load the arguments from a json file, 
 #make sure you save the arguments in at ./args.json
-model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(arg_file))
+model_args, data_args, training_args = parser.parse_json_file(json_file=arg_file)
 
 # Set seed
 set_seed(training_args.seed)
 
 # Load pretrained model
-model = transformers.T5ForConditionalGeneration.from_pretrained(intial_model_path)
+model = transformers.T5ForConditionalGeneration.from_pretrained(intial_model_path, config=model_config)
 
 # print(model)
 

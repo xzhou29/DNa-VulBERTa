@@ -29,11 +29,9 @@ def main():
     vdisc_h45py = h5py.File(in_file)
     output_filename = args.output
 
-
-
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
     parser_path = os.path.join(base_dir, "parser", "languages.so")
-    columns=['index', 'filename', 'code',  'code-2', 'type', 'label']
+    columns=['index', 'filename', 'code',  'nat', 'tags', 'label']
 
     # def data_extractor(index, uniqe_id, label, original_code, columns, naturalize_iter, parser_path):
     new_data_collections = Parallel(n_jobs=args.workers)\

@@ -15,23 +15,56 @@ def load_vult_pretrain_data(base_dir, truncate_split=False, max_len=512):
     loaded_data = {}
     df = {'filename': [], 'text': [], 'label': []}
     for filename in tqdm(file_names):
-        if '_train' not in filename and '_valid' not in filename:
+        if 'train' not in filename:
             continue
         print('loading: ', filename)
         with open(filename, 'rb') as f:
             mydict = pickle.load(f)
             print('number of rows:', len(mydict['filename']))
-            for i in range(len(mydict['filename'][:1000])):
+            for i in range(len(mydict['filename'])):
                 tmp_data = {}
                 code = mydict['code'][i]
                 tmp_data['code'] = preprocess(code)
                 tmp_data['nat']  = mydict['nat'][i]
                 tmp_data['tags']  = mydict['tags'][i]
-                label = mydict['label'][i]
-                for mode in ['code', 'nat', 'tags']:
-                    df['filename'].append(mydict['filename'][i])
-                    df['text'].append(tmp_data[mode])
-                    df['label'].append(str(label))
+                tmp_data['label']  = mydict['label'][i]
+                # for mode in ['code', 'nat', 'tags']:
+                # code <-> label
+                left, right = 'code', 'label'
+                mode = 'Defect: '
+                df['filename'].append(mydict['filename'][i] + left)
+                df['text'].append(mode + tmp_data[left])
+                df['label'].append(str(tmp_data[right]))
+                # code <-> nat
+                mode = 'Naturalize: '
+                left, right = 'code', 'nat'
+                df['filename'].append(mydict['filename'][i] + left)
+                df['text'].append(mode + tmp_data[left])
+                df['label'].append(str(tmp_data[right]))
+                # code <-> tag
+                mode = 'Tag: '
+                left, right = 'code', 'tags'
+                df['filename'].append(mydict['filename'][i] + left)
+                df['text'].append(mode + tmp_data[left])
+                df['label'].append(str(tmp_data[right]))
+                # nat <-> label
+                mode = 'Defect: '
+                left, right = 'nat', 'label'
+                df['filename'].append(mydict['filename'][i] + left)
+                df['text'].append(mode + tmp_data[left])
+                df['label'].append(str(tmp_data[right]))
+                # nat <-> tag
+                mode = 'Tag: '
+                left, right = 'nat', 'tags'
+                df['filename'].append(mydict['filename'][i] + left)
+                df['text'].append(mode + tmp_data[left])
+                df['label'].append(str(tmp_data[right]))
+                # tag <-> label
+                mode = 'Defect: '
+                left, right = 'tags', 'label'
+                df['filename'].append(mydict['filename'][i] + left)
+                df['text'].append(mode + tmp_data[left])
+                df['label'].append(str(tmp_data[right]))
         print('done...')
     df = pd.DataFrame(df)
     ### convert to Huggingface dataset

@@ -33,7 +33,7 @@ def main():
     data = read_sysevr_data(filename, args.workers, args.all)
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))   
     parser_path = os.path.join(base_dir, "parser", "languages.so")
-    columns=['index', 'filename', 'code',  'code-2', 'type', 'label']
+    columns=['index', 'filename', 'code',  'nat', 'tags', 'label']
     # def data_extractor(index, uniqe_id, label, original_code, columns, naturalize_iter, parser_path):
     print('processing...')
     new_data_collections = Parallel(n_jobs=args.workers)\
@@ -71,12 +71,12 @@ def read_sysevr_data(filename, workers, is_all):
         del slicelists[-1]
     lst = [i for i in range(0, len(slicelists))]
     # using fixed seed number for reproducity
-    random.Random(2022).shuffle(lst)
+    random.Random(42).shuffle(lst)
     # lst = lst[]
     print(lst[:10])
     if not is_all:
         lst = data[:int(len(lst) * 0.7)]
-        print("get 70% for pre-training")
+        print("get 70 percent for pre-training")
     else:
         print('all data')
 
