@@ -63,7 +63,7 @@ print('data loaded ...')
 # ================== loading raw data START===================
 # maximum sequence length, lowering will result to faster training (when increasing batch size)
 max_length = 512 # 768
-target_max_len = 512
+target_max_len = 256
 # tokenizer = RobertaTokenizerFast.from_pretrained(tokenizer_path, max_len=max_length)
 # when the tokenizer is trained and configured, load it as BertTokenizerFast
 # RobertaTokenizer

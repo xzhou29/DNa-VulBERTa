@@ -84,32 +84,9 @@ def naturalize_code(code, parser_path, random, renaming, tagging, mode='c'):
 
 
 def normal_tokenize(original_code):
-    lines = original_code.split('\n')
-    # stop_chars = {',': 'comma', ':': 'colon', '.': 'dot', '"': 'doublequotation', "'": 'singlequotation', '/': 'backslash', '\\': 'slash',
-    #              ';': 'semi', '[': '$leftbracket', ']': 'rightbracket', '{': 'rightcurly', '}': 'leftcurly', '+': 'plus', '-': 'minus',
-    #              '*': 'times', '=': 'equal',  '(': 'leftpar', ')': 'rightpar', '&': 'and', '%': 'percent', '$': 'dollar', '#': 'num',
-    #              '!': '', '`': 'backtick', '|': 'pipe', '<': 'less', '>': 'greater', '?': 'questionmark', '@': 'at', '_': 'underline'}
-    stop_chars = {}
-    all_tokens = []
-    for i, line in enumerate(lines):
-        if not line.strip():
-            continue
-        tmp_tokens = line.split()
-        for t in tmp_tokens:
-            tmp_token = ''
-            for c in t:
-                if c in stop_chars:
-                    all_tokens.append(tmp_token)
-                    all_tokens.append(c)
-                    tmp_token = ''
-                else:
-                    tmp_token += c
-            if tmp_token:
-                all_tokens.append(tmp_token)
-                tmp_token = ''
-        all_tokens.append('newline')
-    return ' '.join(all_tokens)
-    # print(all_tokens)
+    code = ' '.join(original_code.split())
+    return code
+
 
 # remove comments from raw source code
 def remove_comments(code_str):
